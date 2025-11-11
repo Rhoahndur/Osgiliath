@@ -3,7 +3,7 @@
 **Project:** Osgiliath - AI-Assisted Full-Stack ERP Assessment  
 **Date:** November 7, 2025  
 **Version:** 1.0
-
+ 
 ---
 
 ## Table of Contents
