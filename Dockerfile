@@ -10,7 +10,7 @@ RUN chmod +x mvnw
 RUN ./mvnw clean package -DskipTests
 
 # Runtime stage
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 WORKDIR /app
 COPY --from=build /app/target/osgiliath-backend-1.0.0-SNAPSHOT.jar app.jar
 ENV PORT=8080
