@@ -1,0 +1,112 @@
+package com.invoiceme.application.customer.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+/**
+ * Response DTO representing customer data
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Schema(description = "Customer response data")
+public class CustomerResponse {
+
+    @Schema(description = "Customer unique identifier", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID id;
+
+    @Schema(description = "Customer name", example = "John Doe")
+    private String name;
+
+    @Schema(description = "Customer email address", example = "john.doe@example.com")
+    private String email;
+
+    @Schema(description = "Customer phone number", example = "+1-555-0123")
+    private String phone;
+
+    @Schema(description = "Customer address", example = "123 Main St, Anytown, ST 12345")
+    private String address;
+
+    @Schema(description = "Timestamp when customer was created")
+    private LocalDateTime createdAt;
+
+    @Schema(description = "Timestamp when customer was last updated")
+    private LocalDateTime updatedAt;
+
+    @Schema(description = "Entity version for optimistic locking")
+    private Long version;
+
+    public CustomerResponse() {
+    }
+
+    public CustomerResponse(UUID id, String name, String email, String phone, String address, LocalDateTime createdAt, LocalDateTime updatedAt, Long version) {
+        this.id = id;
+    }
+
+    public static CustomerResponseBuilder builder() {
+        return new CustomerResponseBuilder();
+    }
+
+    public static class CustomerResponseBuilder {
+        private UUID id;
+        private String name;
+        private String email;
+        private String phone;
+        private String address;
+        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
+        private Long version;
+    }
+
+
+        public CustomerResponseBuilder id(UUID id) {
+            this.id = id;
+            return this;
+        }
+
+        public CustomerResponseBuilder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public CustomerResponseBuilder email(String email) {
+            this.email = email;
+            return this;
+        }
+
+        public CustomerResponseBuilder phone(String phone) {
+            this.phone = phone;
+            return this;
+        }
+
+        public CustomerResponseBuilder address(String address) {
+            this.address = address;
+            return this;
+        }
+
+        public CustomerResponseBuilder createdAt(LocalDateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public CustomerResponseBuilder updatedAt(LocalDateTime updatedAt) {
+            this.updatedAt = updatedAt;
+            return this;
+        }
+
+        public CustomerResponseBuilder version(Long version) {
+            this.version = version;
+            return this;
+        }
+
+        public CustomerResponse build() {
+            return new CustomerResponse(this.id, this.name, this.email, this.phone, this.address, this.createdAt, this.updatedAt, this.version);
+        }
+    }

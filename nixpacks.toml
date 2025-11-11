@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ['openjdk17']
+
+[phases.build]
+cmds = ['cd backend && ./mvnw clean package -DskipTests']
+
+[start]
+cmd = 'cd backend && java -Dserver.port=$PORT -jar target/osgiliath-backend-1.0.0-SNAPSHOT.jar'

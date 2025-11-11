@@ -1,0 +1,49 @@
+package com.osgiliath.application.customer.command;
+
+import com.osgiliath.application.customer.dto.CustomerMapper;
+import com.osgiliath.application.customer.dto.CustomerResponse;
+import com.osgiliath.domain.customer.Customer;
+import com.osgiliath.domain.customer.CustomerRepository;
+import com.osgiliath.domain.shared.DomainException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Handler for CreateCustomerCommand
+ * Encapsulates business logic for customer creation
+ */
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class CreateCustomerHandler {
+
+    private final CustomerRepository customerRepository;
+    private final CustomerMapper customerMapper;
+
+    @Transactional
+    public CustomerResponse handle(CreateCustomerCommand command) {
+        log.info("Creating customer with email: {}", command.getEmail());
+
+        // Check if email already exists
+        if (customerRepository.existsByEmail(command.getEmail())) {
+            throw new DomainException("Customer with email " + command.getEmail() + " already exists");
+        }
+
+        // Create customer using domain factory method
+        Customer customer = Customer.create(
+                command.getName(),
+                command.getEmail(),
+                command.getPhone(),
+                command.getAddress()
+        );
+
+        // Save to repository
+        Customer savedCustomer = customerRepository.save(customer);
+
+        log.info("Customer created successfully with ID: {}", savedCustomer.getId());
+
+        return customerMapper.toResponse(savedCustomer);
+    }
+}

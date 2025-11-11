@@ -1,0 +1,41 @@
+package com.osgiliath.config;
+
+import com.osgiliath.domain.auth.User;
+import com.osgiliath.infrastructure.auth.JpaUserRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class DataSeeder implements CommandLineRunner {
+
+    private final JpaUserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Override
+    public void run(String... args) throws Exception {
+        seedDefaultAdminUser();
+    }
+
+    private void seedDefaultAdminUser() {
+        String adminUsername = "admin";
+
+        if (!userRepository.existsByUsername(adminUsername)) {
+            User admin = new User(
+                adminUsername,
+                passwordEncoder.encode("admin123"),
+                "admin@osgiliath.com"
+            );
+
+            userRepository.save(admin);
+            log.info("Default admin user created successfully");
+            log.info("Username: admin, Password: admin123");
+        } else {
+            log.info("Admin user already exists, skipping creation");
+        }
+    }
+}

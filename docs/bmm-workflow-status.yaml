@@ -1,0 +1,558 @@
+# Workflow Status - Osgiliath Project
+# This tracks progress through BMM methodology with parallel team execution
+# Implementation (Phase 3) uses epic-based team sharding for parallel development
+
+generated: "2025-11-07"
+project: "Osgiliath"
+project_type: "software"
+selected_track: "method"
+field_type: "greenfield"
+workflow_path: "method-greenfield.yaml"
+
+# PARALLEL TEAM EXECUTION STRATEGY:
+# =================================
+# Epics 1-2: Foundation Team (DEV + Architect)
+# Epic 3: Customer Team (DEV + TEA)
+# Epic 4: Invoice Team (DEV + TEA)
+# Epic 5: Payment Team (DEV + TEA)
+# Epic 6: Security Team (DEV + TEA)
+# Epic 7: Frontend Team (DEV + UX Designer)
+# Epic 8: QA Team (TEA + DEV)
+# Epic 9: Documentation Team (Technical Writer + DEV)
+#
+# Teams 3-5 can work in PARALLEL after foundation (Epics 1-2)
+# Epic 6 can run in parallel with 3-5
+# Epic 7 depends on backend APIs from 3-5
+# Epics 8-9 are final phase activities
+
+# STATUS DEFINITIONS:
+# ==================
+# Initial Status (before completion):
+#   - required: Must be completed to progress
+#   - optional: Can be completed but not required
+#   - recommended: Strongly suggested but not required
+#   - conditional: Required only if certain conditions met
+#
+# Completion Status:
+#   - {file-path}: File created/found
+#   - skipped: Optional/conditional workflow that was skipped
+#   - in-progress: Currently being worked on
+
+workflow_status:
+  # Phase 0: Discovery (Optional) - SKIPPED
+
+  # Phase 1: Planning - COMPLETED
+  prd: "PRD.md"
+  validate-prd: skipped
+  create-design: conditional  # Will be needed for Epic 7
+
+  # Phase 2: Solutioning - COMPLETED
+  create-architecture: "architecture.md"
+  validate-architecture: skipped
+  solutioning-gate-check: required  # Next step
+
+  # Phase 3: Implementation - Epic-Based Team Execution
+  sprint-planning: required
+
+# EPIC-BASED IMPLEMENTATION PLAN
+# ==============================
+# This extends the standard BMM workflow with detailed epic tracking
+# Each epic can be assigned to a specialized team for parallel execution
+
+epic_implementation:
+  # Epic 1: Foundation - SEQUENTIAL (Must complete first)
+  epic_1_project_setup:
+    name: "Project Setup & Infrastructure"
+    priority: "P0"
+    duration: "4-6 hours"
+    team: "Foundation Team (DEV + Architect)"
+    dependencies: []
+    can_parallelize: false
+    status: "required"
+    stories:
+      - story_1_1_backend_structure:
+          name: "Initialize Backend Project Structure"
+          owner: "DEV"
+          reviewer: "Architect"
+          tasks:
+            - "Create Spring Boot project (Java 17+, Maven)"
+            - "Setup VSA directory structure"
+            - "Configure application properties"
+          estimated_hours: 2
+
+      - story_1_2_frontend_structure:
+          name: "Initialize Frontend Project Structure"
+          owner: "DEV"
+          reviewer: "UX Designer"
+          tasks:
+            - "Create React/Next.js project with TypeScript"
+            - "Setup MVVM directory structure"
+            - "Configure API client and environment"
+          estimated_hours: 2
+
+      - story_1_3_database_setup:
+          name: "Database Setup"
+          owner: "DEV"
+          reviewer: "Architect"
+          tasks:
+            - "Setup PostgreSQL with Docker Compose"
+            - "Create base entity classes and JPA config"
+          estimated_hours: 1.5
+
+      - story_1_4_dev_tools:
+          name: "Development Tools Setup"
+          owner: "DEV"
+          tasks:
+            - "Configure linting and formatting"
+            - "Setup Git workflows"
+          estimated_hours: 1
+
+  # Epic 2: Domain Layer - SEQUENTIAL (Must complete after Epic 1)
+  epic_2_domain_layer:
+    name: "Domain Layer Implementation"
+    priority: "P0"
+    duration: "6-8 hours"
+    team: "Foundation Team (DEV + Architect)"
+    dependencies: ["epic_1_project_setup"]
+    can_parallelize: false
+    status: "required"
+    stories:
+      - story_2_1_customer_domain:
+          name: "Implement Customer Domain"
+          owner: "DEV"
+          reviewer: "Architect"
+          tasks:
+            - "Create Customer aggregate root with value objects"
+            - "Create CustomerRepository interface"
+            - "Create Customer domain events (optional)"
+          estimated_hours: 2
+
+      - story_2_2_invoice_domain:
+          name: "Implement Invoice Domain"
+          owner: "DEV"
+          reviewer: "Architect"
+          tasks:
+            - "Create Invoice aggregate root with LineItem"
+            - "Implement invoice business logic (add items, calculate totals, state transitions)"
+            - "Create InvoiceRepository interface"
+            - "Create Invoice domain events (optional)"
+          estimated_hours: 3
+
+      - story_2_3_payment_domain:
+          name: "Implement Payment Domain"
+          owner: "DEV"
+          reviewer: "Architect"
+          tasks:
+            - "Create Payment aggregate root"
+            - "Create PaymentRepository interface"
+            - "Create Payment domain events (optional)"
+          estimated_hours: 1.5
+
+      - story_2_4_shared_domain:
+          name: "Implement Shared Domain Concepts"
+          owner: "DEV"
+          tasks:
+            - "Create value objects (Money, Email)"
+            - "Create domain exceptions"
+          estimated_hours: 1.5
+
+  # PARALLEL EXECUTION ZONE BEGINS HERE
+  # Epics 3, 4, 5, 6 can run in parallel after Epic 2 completes
+
+  # Epic 3: Customer Management - PARALLEL Team Alpha
+  epic_3_customer_mgmt:
+    name: "Customer Management"
+    priority: "P0"
+    duration: "8-10 hours"
+    team: "Customer Team (DEV + TEA)"
+    dependencies: ["epic_2_domain_layer"]
+    can_parallelize: true
+    parallel_group: "backend_features"
+    status: "required"
+    stories:
+      - story_3_1_create_customer:
+          name: "Create Customer - Backend"
+          owner: "DEV"
+          reviewer: "TEA"
+          tasks:
+            - "Implement CreateCustomerCommand and Handler"
+            - "Implement CustomerRepository (JPA)"
+            - "Create DTOs and Mappers"
+            - "Implement CustomerController POST endpoint"
+          estimated_hours: 3
+          tests: "Integration + Unit tests"
+
+      - story_3_2_retrieve_customer:
+          name: "Retrieve Customer - Backend"
+          owner: "DEV"
+          reviewer: "TEA"
+          tasks:
+            - "Implement GetCustomerByIdQuery and Handler"
+            - "Implement ListCustomersQuery with pagination"
+            - "Implement CustomerController GET endpoints"
+          estimated_hours: 2.5
+          tests: "Integration tests"
+
+      - story_3_3_update_customer:
+          name: "Update Customer - Backend"
+          owner: "DEV"
+          reviewer: "TEA"
+          tasks:
+            - "Implement UpdateCustomerCommand and Handler"
+            - "Implement CustomerController PUT endpoint"
+          estimated_hours: 1.5
+          tests: "Integration tests"
+
+      - story_3_4_delete_customer:
+          name: "Delete Customer - Backend"
+          owner: "DEV"
+          reviewer: "TEA"
+          tasks:
+            - "Implement DeleteCustomerCommand and Handler (with invoice validation)"
+            - "Implement CustomerController DELETE endpoint"
+          estimated_hours: 2
+          tests: "Integration tests with business rule validation"
+
+  # Epic 4: Invoice Management - PARALLEL Team Beta
+  epic_4_invoice_mgmt:
+    name: "Invoice Management"
+    priority: "P0"
+    duration: "12-16 hours"
+    team: "Invoice Team (DEV + TEA)"
+    dependencies: ["epic_2_domain_layer", "epic_3_customer_mgmt"]
+    can_parallelize: true
+    parallel_group: "backend_features"
+    status: "required"
+    stories:
+      - story_4_1_create_invoice:
+          name: "Create Invoice (Draft) - Backend"
+          owner: "DEV"
+          reviewer: "TEA"
+          tasks:
+            - "Implement CreateInvoiceCommand with line items"
+            - "Implement InvoiceRepository with JPA mappings"
+            - "Create Invoice DTOs and Mappers"
+            - "Implement InvoiceController POST endpoint"
+          estimated_hours: 4
+          tests: "Integration tests"
+
+      - story_4_2_retrieve_invoice:
+          name: "Retrieve Invoice - Backend"
+          owner: "DEV"
+          reviewer: "TEA"
+          tasks:
+            - "Implement GetInvoiceByIdQuery with eager loading"
+            - "Implement ListInvoicesQuery with filters and pagination"
+            - "Implement GetInvoiceBalanceQuery"
+            - "Implement InvoiceController GET endpoints"
+          estimated_hours: 3.5
+          tests: "Integration tests with filtering"
+
+      - story_4_3_update_invoice:
+          name: "Update Invoice (Draft Only) - Backend"
+          owner: "DEV"
+          reviewer: "TEA"
+          tasks:
+            - "Implement UpdateInvoiceCommand with DRAFT validation"
+            - "Implement InvoiceController PUT endpoint"
+          estimated_hours: 2
+          tests: "Integration tests with status validation"
+
+      - story_4_4_manage_line_items:
+          name: "Manage Line Items - Backend"
+          owner: "DEV"
+          reviewer: "TEA"
+          tasks:
+            - "Implement AddLineItemCommand with total recalculation"
+            - "Implement RemoveLineItemCommand"
+            - "Implement line item endpoints"
+          estimated_hours: 3
+          tests: "Integration tests with calculation validation"
+
+      - story_4_5_send_invoice:
+          name: "Send Invoice - Backend"
+          owner: "DEV"
+          reviewer: "TEA"
+          tasks:
+            - "Implement SendInvoiceCommand with state transition"
+            - "Implement send endpoint"
+          estimated_hours: 2
+          tests: "Integration tests for state machine"
+
+  # Epic 5: Payment Management - PARALLEL Team Gamma
+  epic_5_payment_mgmt:
+    name: "Payment Management"
+    priority: "P0"
+    duration: "8-10 hours"
+    team: "Payment Team (DEV + TEA)"
+    dependencies: ["epic_2_domain_layer", "epic_4_invoice_mgmt"]
+    can_parallelize: true
+    parallel_group: "backend_features"
+    status: "required"
+    stories:
+      - story_5_1_record_payment:
+          name: "Record Payment - Backend"
+          owner: "DEV"
+          reviewer: "TEA"
+          tasks:
+            - "Implement RecordPaymentCommand with balance validation"
+            - "Implement PaymentRepository with JPA"
+            - "Create Payment DTOs and Mappers"
+            - "Implement PaymentController POST endpoint"
+            - "Auto-transition invoice to PAID when balance = 0"
+          estimated_hours: 4.5
+          tests: "Integration tests with partial/full payment scenarios"
+
+      - story_5_2_retrieve_payment:
+          name: "Retrieve Payment - Backend"
+          owner: "DEV"
+          reviewer: "TEA"
+          tasks:
+            - "Implement GetPaymentByIdQuery"
+            - "Implement ListPaymentsForInvoiceQuery"
+            - "Implement PaymentController GET endpoints"
+          estimated_hours: 2.5
+          tests: "Integration tests"
+
+  # Epic 6: Authentication & Security - PARALLEL Team Delta
+  epic_6_auth_security:
+    name: "Authentication & Security"
+    priority: "P0"
+    duration: "6-8 hours"
+    team: "Security Team (DEV + TEA)"
+    dependencies: ["epic_1_project_setup"]
+    can_parallelize: true
+    parallel_group: "cross_cutting"
+    status: "required"
+    stories:
+      - story_6_1_auth_backend:
+          name: "Implement Authentication - Backend"
+          owner: "DEV"
+          reviewer: "TEA"
+          tasks:
+            - "Configure Spring Security"
+            - "Create User entity and repository"
+            - "Implement login endpoint with JWT/session"
+            - "Secure API endpoints with role-based access"
+          estimated_hours: 4
+          tests: "Integration tests for auth flows"
+
+      - story_6_2_auth_frontend:
+          name: "Implement Authentication - Frontend"
+          owner: "DEV"
+          reviewer: "UX Designer"
+          tasks:
+            - "Create login page/component"
+            - "Implement authentication service"
+            - "Implement route protection"
+          estimated_hours: 3
+          tests: "Component tests"
+
+  # Epic 7: Frontend Implementation - DEPENDS on backend APIs
+  epic_7_frontend:
+    name: "Frontend Implementation"
+    priority: "P1"
+    duration: "16-20 hours"
+    team: "Frontend Team (DEV + UX Designer)"
+    dependencies: ["epic_3_customer_mgmt", "epic_4_invoice_mgmt", "epic_5_payment_mgmt", "epic_6_auth_security"]
+    can_parallelize: false
+    status: "required"
+    notes: "Requires create-design workflow from Phase 1 to be completed first"
+    stories:
+      - story_7_1_customer_ui:
+          name: "Customer Management UI"
+          owner: "DEV"
+          reviewer: "UX Designer"
+          tasks:
+            - "Create Customer TypeScript models and service"
+            - "Create CustomerList view and viewmodel"
+            - "Create CustomerForm view and viewmodel"
+            - "Create CustomerDetail view"
+          estimated_hours: 5
+          tests: "Component tests"
+
+      - story_7_2_invoice_ui:
+          name: "Invoice Management UI"
+          owner: "DEV"
+          reviewer: "UX Designer"
+          tasks:
+            - "Create Invoice TypeScript models and service"
+            - "Create InvoiceList view with filters"
+            - "Create InvoiceForm view (basic + line items)"
+            - "Create InvoiceDetail view with actions"
+          estimated_hours: 7
+          tests: "Component tests"
+
+      - story_7_3_payment_ui:
+          name: "Payment Management UI"
+          owner: "DEV"
+          reviewer: "UX Designer"
+          tasks:
+            - "Create Payment TypeScript models and service"
+            - "Create PaymentForm view"
+            - "Create PaymentList view"
+          estimated_hours: 3.5
+          tests: "Component tests"
+
+      - story_7_4_navigation:
+          name: "Navigation and Layout"
+          owner: "DEV"
+          reviewer: "UX Designer"
+          tasks:
+            - "Create main layout component"
+            - "Configure routing"
+            - "Create dashboard/home page"
+          estimated_hours: 3
+
+      - story_7_5_polish:
+          name: "UI/UX Polish"
+          owner: "DEV"
+          reviewer: "UX Designer"
+          tasks:
+            - "Implement loading states"
+            - "Implement error handling UI"
+            - "Responsive design adjustments"
+            - "Accessibility improvements"
+          estimated_hours: 4
+
+  # Epic 8: Testing & Quality Assurance - PARALLEL with implementation
+  epic_8_testing_qa:
+    name: "Testing & Quality Assurance"
+    priority: "P0"
+    duration: "8-12 hours"
+    team: "QA Team (TEA + DEV)"
+    dependencies: ["epic_3_customer_mgmt", "epic_4_invoice_mgmt", "epic_5_payment_mgmt"]
+    can_parallelize: true
+    parallel_group: "quality"
+    status: "required"
+    stories:
+      - story_8_1_backend_integration:
+          name: "Backend Integration Tests"
+          owner: "TEA"
+          reviewer: "DEV"
+          tasks:
+            - "Setup test infrastructure with TestContainers"
+            - "Write Customer integration tests"
+            - "Write Invoice integration tests (full lifecycle)"
+            - "Write Payment integration tests"
+            - "Write end-to-end flow test"
+          estimated_hours: 6
+
+      - story_8_2_backend_unit:
+          name: "Backend Unit Tests"
+          owner: "DEV"
+          reviewer: "TEA"
+          tasks:
+            - "Write domain model unit tests"
+            - "Write command handler unit tests"
+          estimated_hours: 3
+
+      - story_8_3_frontend_tests:
+          name: "Frontend Tests (Optional)"
+          owner: "TEA"
+          reviewer: "DEV"
+          tasks:
+            - "Write component tests with React Testing Library"
+            - "Write ViewModel tests"
+          estimated_hours: 3
+          optional: true
+
+      - story_8_4_api_docs:
+          name: "API Documentation"
+          owner: "DEV"
+          reviewer: "Technical Writer"
+          tasks:
+            - "Configure Swagger/OpenAPI"
+            - "Add API annotations and examples"
+          estimated_hours: 2
+
+  # Epic 9: Documentation & Delivery - FINAL PHASE
+  epic_9_documentation:
+    name: "Documentation & Delivery"
+    priority: "P0"
+    duration: "6-8 hours"
+    team: "Documentation Team (Technical Writer + DEV)"
+    dependencies: ["epic_7_frontend", "epic_8_testing_qa"]
+    can_parallelize: false
+    status: "required"
+    stories:
+      - story_9_1_tech_docs:
+          name: "Technical Documentation"
+          owner: "Technical Writer"
+          reviewer: "Architect"
+          tasks:
+            - "Write architectural overview (DDD, CQRS, VSA)"
+            - "Document design decisions and trade-offs"
+            - "Create database schema documentation"
+            - "Document challenges and solutions"
+          estimated_hours: 3
+
+      - story_9_2_ai_docs:
+          name: "AI Tool Documentation"
+          owner: "DEV"
+          reviewer: "Technical Writer"
+          tasks:
+            - "Document AI tools used with versions"
+            - "Provide 3-5 example prompts with explanations"
+            - "Document AI workflow and quality assurance"
+          estimated_hours: 2
+
+      - story_9_3_setup_docs:
+          name: "Setup and README Documentation"
+          owner: "Technical Writer"
+          reviewer: "DEV"
+          tasks:
+            - "Write comprehensive README"
+            - "Create environment setup guide with .env.example"
+          estimated_hours: 2
+
+      - story_9_4_demo:
+          name: "Demo Video/Presentation"
+          owner: "DEV"
+          reviewer: "PM"
+          tasks:
+            - "Record 5-10 minute demo video"
+            - "Create demo script"
+          estimated_hours: 1.5
+
+      - story_9_5_final_check:
+          name: "Final Quality Check"
+          owner: "DEV"
+          reviewer: "Architect + TEA"
+          tasks:
+            - "Code cleanup (remove comments, unused imports)"
+            - "Verify all tests pass with coverage report"
+            - "Performance validation (< 200ms CRUD operations)"
+            - "Complete submission checklist"
+          estimated_hours: 2
+
+# TEAM COORDINATION NOTES
+# =======================
+# Parallel Execution Strategy:
+#
+# Wave 1 (Sequential):
+#   - Epic 1: Foundation Team
+#   - Epic 2: Foundation Team
+#
+# Wave 2 (Parallel - 4 teams working simultaneously):
+#   - Epic 3: Customer Team
+#   - Epic 4: Invoice Team
+#   - Epic 5: Payment Team
+#   - Epic 6: Security Team
+#
+# Wave 3 (Sequential):
+#   - Epic 7: Frontend Team (waits for backend APIs)
+#
+# Wave 4 (Parallel):
+#   - Epic 8: QA Team (starts after backend features)
+#   - Epic 9: Documentation Team (starts after frontend)
+#
+# Critical Path: Epic 1 → Epic 2 → Epic 4 → Epic 5 → Epic 7 → Epic 9
+# Total Duration: ~45-65 hours with optimal parallelization (vs 80-100 sequential)
+
+# NEXT ACTIONS
+# ============
+# 1. Complete solutioning-gate-check workflow
+# 2. Run create-design workflow for UX (needed for Epic 7)
+# 3. Run sprint-planning to initialize sprint tracking
+# 4. Begin Epic 1 with Foundation Team
