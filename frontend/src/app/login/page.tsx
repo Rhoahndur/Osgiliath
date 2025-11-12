@@ -13,7 +13,6 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    name: '',
     email: ''
   });
 
@@ -23,9 +22,9 @@ export default function LoginPage() {
     try {
       if (isRegistering) {
         await register({
-          email: formData.email,
+          username: formData.username,
           password: formData.password,
-          name: formData.name
+          email: formData.email
         });
       } else {
         await login({
@@ -57,17 +56,6 @@ export default function LoginPage() {
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
-            {isRegistering && (
-              <Input
-                label="Full Name"
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                placeholder="John Doe"
-              />
-            )}
             <Input
               label="Username"
               type="text"
@@ -77,6 +65,17 @@ export default function LoginPage() {
               required
               placeholder="admin"
             />
+            {isRegistering && (
+              <Input
+                label="Email"
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                placeholder="user@example.com"
+              />
+            )}
             <Input
               label="Password"
               type="password"
