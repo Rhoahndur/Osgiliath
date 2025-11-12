@@ -39,20 +39,20 @@ export default function DashboardPage() {
 
       // Handle different response formats:
       // 1. Array response: [invoice1, invoice2, ...]
-      // 2. Custom format: { invoices: [...], total: number }
+      // 2. Spring Page response: { content: [...], totalElements: number }
       const invoices = Array.isArray(allInvoicesResponse)
         ? allInvoicesResponse
-        : (allInvoicesResponse.invoices || []);
+        : (allInvoicesResponse.content || []);
 
       const recentInvoicesData = Array.isArray(invoicesResponse)
         ? invoicesResponse
-        : (invoicesResponse.invoices || []);
+        : (invoicesResponse.content || []);
 
       setStats({
-        totalCustomers: customersResponse.total || 0,
+        totalCustomers: customersResponse.totalElements || 0,
         totalInvoices: Array.isArray(allInvoicesResponse)
           ? allInvoicesResponse.length
-          : (allInvoicesResponse.total || 0),
+          : (allInvoicesResponse.totalElements || 0),
         draftInvoices: invoices.filter(i => i.status === InvoiceStatus.DRAFT).length,
         paidInvoices: invoices.filter(i => i.status === InvoiceStatus.PAID).length,
         overdueInvoices: invoices.filter(i => i.status === InvoiceStatus.OVERDUE).length
