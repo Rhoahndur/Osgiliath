@@ -10,12 +10,9 @@ export const authService = {
     return response.data;
   },
 
-  async register(userData: RegisterRequest): Promise<LoginResponse> {
-    const response = await apiClient.post<LoginResponse>('/auth/register', userData);
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-    }
-    return response.data;
+  async register(userData: RegisterRequest): Promise<void> {
+    // Register endpoint returns UserResponse (no token), so we don't store anything
+    await apiClient.post('/auth/register', userData);
   },
 
   async getCurrentUser(): Promise<User> {

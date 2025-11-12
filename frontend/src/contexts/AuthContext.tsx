@@ -66,8 +66,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       setError(null);
+      // Register the user
       await authService.register(userData);
-      // Fetch the current user after successful registration
+      // Automatically login with the same credentials
+      await authService.login({
+        username: userData.username,
+        password: userData.password
+      });
+      // Fetch the current user after successful login
       const currentUser = await authService.getCurrentUser();
       setUser(currentUser);
     } catch (err: any) {
