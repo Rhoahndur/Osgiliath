@@ -1,0 +1,33 @@
+# Production configuration optimizations
+spring:
+  jpa:
+    show-sql: false  # Disable SQL logging in production
+    hibernate:
+      ddl-auto: validate  # Don't auto-update schema in production
+    properties:
+      hibernate:
+        format_sql: false  # Disable SQL formatting
+        # Enable second-level cache for better performance
+        cache:
+          use_second_level_cache: false
+        # Connection pool optimization
+        jdbc:
+          batch_size: 20
+          fetch_size: 50
+
+logging:
+  level:
+    root: WARN                           # Only warnings and errors
+    com.osgiliath: INFO                   # Info level for application
+    org.springframework.security: WARN    # Reduce security logging
+    org.hibernate.SQL: WARN               # No SQL logging
+    org.hibernate.type: WARN              # No parameter binding logging
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"  # Simpler log format
+
+# Disable Swagger in production for security and performance
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
