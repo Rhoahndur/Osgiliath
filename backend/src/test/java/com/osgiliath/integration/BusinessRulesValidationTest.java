@@ -101,7 +101,7 @@ class BusinessRulesValidationTest extends BaseIntegrationTest {
                         post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(paymentRequest)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableEntity())
                 .andExpect(
                         jsonPath("$.message")
                                 .value(
@@ -154,7 +154,7 @@ class BusinessRulesValidationTest extends BaseIntegrationTest {
                         post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(paymentRequest)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableEntity())
                 .andExpect(
                         jsonPath("$.message")
                                 .value(
@@ -205,7 +205,7 @@ class BusinessRulesValidationTest extends BaseIntegrationTest {
                         post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(extraPayment)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableEntity())
                 .andExpect(
                         jsonPath("$.message")
                                 .value(
@@ -238,7 +238,7 @@ class BusinessRulesValidationTest extends BaseIntegrationTest {
                         post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(paymentRequest)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableEntity())
                 .andExpect(
                         jsonPath("$.message")
                                 .value(

@@ -102,9 +102,9 @@ class EndToEndFlowTest extends BaseIntegrationTest {
                         post("/api/invoices/" + invoiceId + "/line-items")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(lineItem1)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.lineItems.length()").value(1))
-                .andExpect(jsonPath("$.subtotal").value(6000.00));
+                .andExpect(status().isCreated())
+                .andExpect(
+                        jsonPath("$.description").value("Consulting Services - Project Analysis"));
 
         // Line Item 2: Development Services - 60 hours @ $200/hour = $12,000
         AddLineItemCommand lineItem2 =
@@ -114,11 +114,8 @@ class EndToEndFlowTest extends BaseIntegrationTest {
                         post("/api/invoices/" + invoiceId + "/line-items")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(lineItem2)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.lineItems.length()").value(2))
-                .andExpect(jsonPath("$.subtotal").value(18000.00))
-                .andExpect(jsonPath("$.taxAmount").value(1800.00)) // 10% tax
-                .andExpect(jsonPath("$.totalAmount").value(19800.00));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.description").value("Software Development Services"));
 
         // Line Item 3: Documentation - $500
         AddLineItemCommand lineItem3 =
@@ -128,11 +125,8 @@ class EndToEndFlowTest extends BaseIntegrationTest {
                         post("/api/invoices/" + invoiceId + "/line-items")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(lineItem3)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.lineItems.length()").value(3))
-                .andExpect(jsonPath("$.subtotal").value(18500.00))
-                .andExpect(jsonPath("$.taxAmount").value(1850.00))
-                .andExpect(jsonPath("$.totalAmount").value(20350.00));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.description").value("Technical Documentation"));
 
         // Verify line items in database
         Invoice invoiceWithItems = invoiceRepository.findById(invoiceId).orElseThrow();

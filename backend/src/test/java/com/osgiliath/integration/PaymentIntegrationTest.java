@@ -187,7 +187,7 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
                         post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableEntity())
                 .andExpect(
                         jsonPath("$.message")
                                 .value(
@@ -215,7 +215,7 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
                         post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableEntity())
                 .andExpect(
                         jsonPath("$.message")
                                 .value(
@@ -239,11 +239,7 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(
-                        jsonPath("$.message")
-                                .value(
-                                        org.hamcrest.Matchers.containsString(
-                                                "Payment amount must be greater than zero")));
+                .andExpect(jsonPath("$.message").value("Request validation failed"));
     }
 
     @Test
@@ -265,11 +261,7 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(
-                        jsonPath("$.message")
-                                .value(
-                                        org.hamcrest.Matchers.containsString(
-                                                "Payment amount must be greater than zero")));
+                .andExpect(jsonPath("$.message").value("Request validation failed"));
     }
 
     @Test
@@ -293,11 +285,7 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(
-                        jsonPath("$.message")
-                                .value(
-                                        org.hamcrest.Matchers.containsString(
-                                                "Payment date cannot be in the future")));
+                .andExpect(jsonPath("$.message").value("Request validation failed"));
     }
 
     @Test

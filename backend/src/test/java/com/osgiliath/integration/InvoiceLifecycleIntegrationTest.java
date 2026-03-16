@@ -209,7 +209,7 @@ class InvoiceLifecycleIntegrationTest extends BaseIntegrationTest {
                         jsonPath("$.message")
                                 .value(
                                         org.hamcrest.Matchers.containsString(
-                                                "Cannot send invoice without line items")));
+                                                "Cannot send an invoice without line items")));
 
         // Verify invoice is still in DRAFT status
         Invoice invoice = invoiceRepository.findById(invoiceId).orElseThrow();
