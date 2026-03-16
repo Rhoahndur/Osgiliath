@@ -106,7 +106,7 @@ class BusinessRulesValidationTest extends BaseIntegrationTest {
                         jsonPath("$.message")
                                 .value(
                                         org.hamcrest.Matchers.containsString(
-                                                "Can only apply payments to sent invoices")));
+                                                "can only be applied to SENT or OVERDUE invoices")));
 
         // Verify no payments were created
         assertThat(paymentRepository.findByInvoiceId(invoice.getId())).isEmpty();
@@ -159,7 +159,7 @@ class BusinessRulesValidationTest extends BaseIntegrationTest {
                         jsonPath("$.message")
                                 .value(
                                         org.hamcrest.Matchers.containsString(
-                                                "Can only apply payments to sent invoices")));
+                                                "can only be applied to SENT or OVERDUE invoices")));
 
         // Verify no payments were created
         assertThat(paymentRepository.findByInvoiceId(invoice.getId())).isEmpty();
@@ -210,7 +210,7 @@ class BusinessRulesValidationTest extends BaseIntegrationTest {
                         jsonPath("$.message")
                                 .value(
                                         org.hamcrest.Matchers.containsString(
-                                                "Can only apply payments to sent invoices")));
+                                                "can only be applied to SENT or OVERDUE invoices")));
     }
 
     @Test
@@ -243,7 +243,7 @@ class BusinessRulesValidationTest extends BaseIntegrationTest {
                         jsonPath("$.message")
                                 .value(
                                         org.hamcrest.Matchers.containsString(
-                                                "Payment amount exceeds balance due")));
+                                                "exceeds invoice balance due")));
 
         // Verify no payment was created
         assertThat(paymentRepository.findByInvoiceId(invoice.getId())).isEmpty();

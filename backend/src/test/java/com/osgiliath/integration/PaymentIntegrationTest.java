@@ -192,7 +192,7 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
                         jsonPath("$.message")
                                 .value(
                                         org.hamcrest.Matchers.containsString(
-                                                "Cannot apply payment to invoice with status: DRAFT")));
+                                                "can only be applied to SENT or OVERDUE invoices")));
     }
 
     @Test

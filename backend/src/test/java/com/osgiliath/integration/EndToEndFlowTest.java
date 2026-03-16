@@ -269,12 +269,12 @@ class EndToEndFlowTest extends BaseIntegrationTest {
                         post("/api/invoices/" + invoiceId + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(extraPayment)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableEntity())
                 .andExpect(
                         jsonPath("$.message")
                                 .value(
                                         org.hamcrest.Matchers.containsString(
-                                                "Can only apply payments to sent invoices")));
+                                                "can only be applied to SENT or OVERDUE invoices")));
 
         // ===== VERIFICATION: Check invoice balance endpoint =====
         mockMvc.perform(get("/api/invoices/" + invoiceId + "/balance"))

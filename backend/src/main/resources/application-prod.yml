@@ -25,6 +25,7 @@ spring:
       maximum-pool-size: 3  # Minimal connection pool
       minimum-idle: 1
       connection-timeout: 30000
+      initialization-fail-timeout: -1  # Don't crash if DB is slow to wake
   main:
     lazy-initialization: true  # Lazy load beans to reduce startup memory
 
