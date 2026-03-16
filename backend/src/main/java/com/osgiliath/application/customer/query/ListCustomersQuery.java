@@ -4,9 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Query to retrieve a paginated list of customers
- */
+/** Query to retrieve a paginated list of customers */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

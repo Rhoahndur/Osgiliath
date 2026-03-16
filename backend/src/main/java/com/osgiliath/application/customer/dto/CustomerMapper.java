@@ -3,15 +3,11 @@ package com.osgiliath.application.customer.dto;
 import com.osgiliath.domain.customer.Customer;
 import org.springframework.stereotype.Component;
 
-/**
- * Mapper for converting between Customer domain model and DTOs
- */
+/** Mapper for converting between Customer domain model and DTOs */
 @Component
 public class CustomerMapper {
 
-    /**
-     * Convert Customer entity to CustomerResponse DTO
-     */
+    /** Convert Customer entity to CustomerResponse DTO */
     public CustomerResponse toResponse(Customer customer) {
         if (customer == null) {
             return null;

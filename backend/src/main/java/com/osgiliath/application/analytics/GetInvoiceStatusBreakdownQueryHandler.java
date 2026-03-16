@@ -3,24 +3,19 @@ package com.osgiliath.application.analytics;
 import com.osgiliath.domain.invoice.InvoiceStatus;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.Map;
-
-/**
- * Handler for GetInvoiceStatusBreakdownQuery
- * Returns count of invoices grouped by status
- */
+/** Handler for GetInvoiceStatusBreakdownQuery Returns count of invoices grouped by status */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class GetInvoiceStatusBreakdownQueryHandler {
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    @PersistenceContext private EntityManager entityManager;
 
     public EntityManager getEntityManager() {
         return entityManager;
@@ -28,10 +23,12 @@ public class GetInvoiceStatusBreakdownQueryHandler {
 
     public Map<InvoiceStatus, Long> handle(GetInvoiceStatusBreakdownQuery query) {
         // Query to get count by status
-        var results = entityManager.createQuery(
-                "SELECT i.status, COUNT(i) FROM Invoice i GROUP BY i.status",
-                Object[].class
-        ).getResultList();
+        var results =
+                entityManager
+                        .createQuery(
+                                "SELECT i.status, COUNT(i) FROM Invoice i GROUP BY i.status",
+                                Object[].class)
+                        .getResultList();
 
         Map<InvoiceStatus, Long> breakdown = new HashMap<>();
 

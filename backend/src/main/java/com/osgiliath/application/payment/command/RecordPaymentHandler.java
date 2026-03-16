@@ -15,13 +15,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Handler for RecordPaymentCommand
- * Implements the critical business logic:
- * 1. Fetch and validate invoice
- * 2. Validate payment amount against balance
- * 3. Create payment domain object
- * 4. Apply payment to invoice (updates balance and may transition to PAID)
- * 5. Save both payment and invoice atomically
+ * Handler for RecordPaymentCommand Implements the critical business logic: 1. Fetch and validate
+ * invoice 2. Validate payment amount against balance 3. Create payment domain object 4. Apply
+ * payment to invoice (updates balance and may transition to PAID) 5. Save both payment and invoice
+ * atomically
  */
 @Service
 @RequiredArgsConstructor
@@ -34,16 +31,20 @@ public class RecordPaymentHandler {
     @Transactional
     public RecordPaymentResult handle(RecordPaymentCommand command) {
         // 1. Fetch invoice
-        Invoice invoice = invoiceRepository.findById(command.getInvoiceId())
-                .orElseThrow(() -> new DomainException(
-                        "Invoice not found: " + command.getInvoiceId()
-                ));
+        Invoice invoice =
+                invoiceRepository
+                        .findById(command.getInvoiceId())
+                        .orElseThrow(
+                                () ->
+                                        new DomainException(
+                                                "Invoice not found: " + command.getInvoiceId()));
 
         // 2. Validate invoice status - must be SENT or OVERDUE
-        if (invoice.getStatus() != InvoiceStatus.SENT && invoice.getStatus() != InvoiceStatus.OVERDUE) {
+        if (invoice.getStatus() != InvoiceStatus.SENT
+                && invoice.getStatus() != InvoiceStatus.OVERDUE) {
             throw new InvoiceNotSentException(
-                    "Payments can only be applied to SENT or OVERDUE invoices. Current status: " + invoice.getStatus()
-            );
+                    "Payments can only be applied to SENT or OVERDUE invoices. Current status: "
+                            + invoice.getStatus());
         }
 
         // 3. Convert amount and validate against balance
@@ -52,19 +53,19 @@ public class RecordPaymentHandler {
         // 4. Payment amount must not exceed balance due
         if (paymentAmount.isGreaterThan(invoice.getBalanceDue())) {
             throw new InsufficientBalanceException(
-                    String.format("Payment amount %.2f exceeds invoice balance due %.2f",
-                            paymentAmount.getAmount(), invoice.getBalanceDue().getAmount())
-            );
+                    String.format(
+                            "Payment amount %.2f exceeds invoice balance due %.2f",
+                            paymentAmount.getAmount(), invoice.getBalanceDue().getAmount()));
         }
 
         // 4. Create payment domain object
-        Payment payment = Payment.create(
-                command.getInvoiceId(),
-                command.getPaymentDate(),
-                paymentAmount,
-                command.getPaymentMethod(),
-                command.getReferenceNumber()
-        );
+        Payment payment =
+                Payment.create(
+                        command.getInvoiceId(),
+                        command.getPaymentDate(),
+                        paymentAmount,
+                        command.getPaymentMethod(),
+                        command.getReferenceNumber());
 
         // 5. Apply payment to invoice - this updates balance and may transition to PAID
         invoice.applyPayment(paymentAmount);
@@ -79,7 +80,6 @@ public class RecordPaymentHandler {
                 savedInvoice.getId(),
                 savedPayment.getAmount(),
                 savedInvoice.getBalanceDue(),
-                savedInvoice.getStatus()
-        );
+                savedInvoice.getStatus());
     }
 }

@@ -13,10 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Handler for ListCustomersQuery
- * Retrieves a paginated list of customers
- */
+/** Handler for ListCustomersQuery Retrieves a paginated list of customers */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -27,14 +24,19 @@ public class ListCustomersQueryHandler {
 
     @Transactional(readOnly = true)
     public Page<CustomerResponse> handle(ListCustomersQuery query) {
-        log.debug("Fetching customers - page: {}, size: {}, search: {}",
-                  query.getPage(), query.getSize(), query.getSearch());
+        log.debug(
+                "Fetching customers - page: {}, size: {}, search: {}",
+                query.getPage(),
+                query.getSize(),
+                query.getSearch());
 
         // Create sort configuration
-        Sort sort = Sort.by(
-                query.getSortDirection().equalsIgnoreCase("ASC") ? Sort.Direction.ASC : Sort.Direction.DESC,
-                query.getSortBy()
-        );
+        Sort sort =
+                Sort.by(
+                        query.getSortDirection().equalsIgnoreCase("ASC")
+                                ? Sort.Direction.ASC
+                                : Sort.Direction.DESC,
+                        query.getSortBy());
 
         // Create pageable
         Pageable pageable = PageRequest.of(query.getPage(), query.getSize(), sort);

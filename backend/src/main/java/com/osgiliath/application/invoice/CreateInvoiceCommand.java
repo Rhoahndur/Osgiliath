@@ -1,15 +1,12 @@
 package com.osgiliath.application.invoice;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-/**
- * Command to create a new invoice with line items
- */
+/** Command to create a new invoice with line items */
 @Getter
 @AllArgsConstructor
 public class CreateInvoiceCommand {

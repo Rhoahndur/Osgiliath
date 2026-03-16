@@ -8,15 +8,14 @@ import com.osgiliath.domain.payment.Payment;
 import com.osgiliath.domain.payment.PaymentMethod;
 import com.osgiliath.domain.payment.PaymentRepository;
 import com.osgiliath.domain.shared.Money;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-
 /**
- * Builder for creating test data with sensible defaults
- * Simplifies test setup and makes tests more readable
+ * Builder for creating test data with sensible defaults Simplifies test setup and makes tests more
+ * readable
  */
 @Component
 @RequiredArgsConstructor
@@ -177,12 +176,7 @@ public class TestDataBuilder {
                 invoice = TestDataBuilder.this.invoice().buildSentAndSave();
             }
             return Payment.create(
-                    invoice.getId(),
-                    paymentDate,
-                    amount,
-                    paymentMethod,
-                    referenceNumber
-            );
+                    invoice.getId(), paymentDate, amount, paymentMethod, referenceNumber);
         }
 
         public Payment buildAndSave() {

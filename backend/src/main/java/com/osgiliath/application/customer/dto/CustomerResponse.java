@@ -1,17 +1,14 @@
 package com.osgiliath.application.customer.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
-/**
- * Response DTO representing customer data
- */
+/** Response DTO representing customer data */
 @Data
 @Builder
 @NoArgsConstructor
@@ -19,7 +16,9 @@ import java.util.UUID;
 @Schema(description = "Customer response data")
 public class CustomerResponse {
 
-    @Schema(description = "Customer unique identifier", example = "123e4567-e89b-12d3-a456-426614174000")
+    @Schema(
+            description = "Customer unique identifier",
+            example = "123e4567-e89b-12d3-a456-426614174000")
     private UUID id;
 
     @Schema(description = "Customer name", example = "John Doe")

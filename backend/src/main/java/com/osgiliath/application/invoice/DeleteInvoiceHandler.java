@@ -8,10 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Handler for DeleteInvoiceCommand
- * Deletes an invoice (DRAFT status only)
- */
+/** Handler for DeleteInvoiceCommand Deletes an invoice (DRAFT status only) */
 @Service
 @RequiredArgsConstructor
 public class DeleteInvoiceHandler {
@@ -20,8 +17,13 @@ public class DeleteInvoiceHandler {
 
     @Transactional
     public void handle(DeleteInvoiceCommand command) {
-        Invoice invoice = invoiceRepository.findById(command.getInvoiceId())
-                .orElseThrow(() -> new DomainException("Invoice not found: " + command.getInvoiceId()));
+        Invoice invoice =
+                invoiceRepository
+                        .findById(command.getInvoiceId())
+                        .orElseThrow(
+                                () ->
+                                        new DomainException(
+                                                "Invoice not found: " + command.getInvoiceId()));
 
         if (invoice.getStatus() != InvoiceStatus.DRAFT) {
             throw new DomainException("Can only delete draft invoices");

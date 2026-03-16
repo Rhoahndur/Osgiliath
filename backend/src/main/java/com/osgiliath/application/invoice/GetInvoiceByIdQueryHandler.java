@@ -7,10 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Handler for GetInvoiceByIdQuery
- * Retrieves an invoice with eager-loaded line items
- */
+/** Handler for GetInvoiceByIdQuery Retrieves an invoice with eager-loaded line items */
 @Service
 @RequiredArgsConstructor
 public class GetInvoiceByIdQueryHandler {
@@ -19,7 +16,9 @@ public class GetInvoiceByIdQueryHandler {
 
     @Transactional(readOnly = true)
     public Invoice handle(GetInvoiceByIdQuery query) {
-        return invoiceRepository.findById(query.getInvoiceId())
-                .orElseThrow(() -> new DomainException("Invoice not found: " + query.getInvoiceId()));
+        return invoiceRepository
+                .findById(query.getInvoiceId())
+                .orElseThrow(
+                        () -> new DomainException("Invoice not found: " + query.getInvoiceId()));
     }
 }

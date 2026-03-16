@@ -4,10 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Payment Repository interface (Domain layer)
- * Implementation will be in infrastructure layer
- */
+/** Payment Repository interface (Domain layer) Implementation will be in infrastructure layer */
 public interface PaymentRepository {
 
     Payment save(Payment payment);

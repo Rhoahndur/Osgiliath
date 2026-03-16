@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -21,12 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
-
-/**
- * REST Controller for Customer management
- * Implements CRUD operations following CQRS pattern
- */
+/** REST Controller for Customer management Implements CRUD operations following CQRS pattern */
 @RestController
 @RequestMapping("/customers")
 @RequiredArgsConstructor
@@ -41,22 +37,27 @@ public class CustomerController {
     private final ListCustomersQueryHandler listCustomersQueryHandler;
 
     @PostMapping
-    @Operation(summary = "Create a new customer", description = "Creates a new customer with the provided details")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Customer created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid request data"),
-            @ApiResponse(responseCode = "409", description = "Customer with email already exists")
-    })
+    @Operation(
+            summary = "Create a new customer",
+            description = "Creates a new customer with the provided details")
+    @ApiResponses(
+            value = {
+                @ApiResponse(responseCode = "201", description = "Customer created successfully"),
+                @ApiResponse(responseCode = "400", description = "Invalid request data"),
+                @ApiResponse(
+                        responseCode = "409",
+                        description = "Customer with email already exists")
+            })
     public ResponseEntity<CustomerResponse> createCustomer(
             @Valid @RequestBody CreateCustomerRequest request) {
         log.info("REST request to create customer: {}", request.getEmail());
 
-        CreateCustomerCommand command = new CreateCustomerCommand(
-                request.getName(),
-                request.getEmail(),
-                request.getPhone(),
-                request.getAddress()
-        );
+        CreateCustomerCommand command =
+                new CreateCustomerCommand(
+                        request.getName(),
+                        request.getEmail(),
+                        request.getPhone(),
+                        request.getAddress());
 
         CustomerResponse response = createCustomerHandler.handle(command);
 
@@ -64,14 +65,16 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get customer by ID", description = "Retrieves a customer by their unique identifier")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Customer found"),
-            @ApiResponse(responseCode = "404", description = "Customer not found")
-    })
+    @Operation(
+            summary = "Get customer by ID",
+            description = "Retrieves a customer by their unique identifier")
+    @ApiResponses(
+            value = {
+                @ApiResponse(responseCode = "200", description = "Customer found"),
+                @ApiResponse(responseCode = "404", description = "Customer not found")
+            })
     public ResponseEntity<CustomerResponse> getCustomerById(
-            @Parameter(description = "Customer ID", required = true)
-            @PathVariable UUID id) {
+            @Parameter(description = "Customer ID", required = true) @PathVariable UUID id) {
         log.info("REST request to get customer: {}", id);
 
         GetCustomerByIdQuery query = new GetCustomerByIdQuery(id);
@@ -81,50 +84,63 @@ public class CustomerController {
     }
 
     @GetMapping
-    @Operation(summary = "List customers", description = "Retrieves a paginated list of customers with optional search")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Customers retrieved successfully")
-    })
+    @Operation(
+            summary = "List customers",
+            description = "Retrieves a paginated list of customers with optional search")
+    @ApiResponses(
+            value = {
+                @ApiResponse(responseCode = "200", description = "Customers retrieved successfully")
+            })
     public ResponseEntity<Page<CustomerResponse>> listCustomers(
-            @Parameter(description = "Page number (0-based)")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size")
-            @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "Sort field")
-            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0")
+                    int page,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Sort field") @RequestParam(defaultValue = "createdAt")
+                    String sortBy,
             @Parameter(description = "Sort direction (ASC or DESC)")
-            @RequestParam(defaultValue = "DESC") String sortDirection,
+                    @RequestParam(defaultValue = "DESC")
+                    String sortDirection,
             @Parameter(description = "Search term for name or email")
-            @RequestParam(required = false) String search) {
-        log.info("REST request to list customers - page: {}, size: {}, search: {}", page, size, search);
+                    @RequestParam(required = false)
+                    String search) {
+        log.info(
+                "REST request to list customers - page: {}, size: {}, search: {}",
+                page,
+                size,
+                search);
 
-        ListCustomersQuery query = new ListCustomersQuery(page, size, sortBy, sortDirection, search);
+        ListCustomersQuery query =
+                new ListCustomersQuery(page, size, sortBy, sortDirection, search);
         Page<CustomerResponse> response = listCustomersQueryHandler.handle(query);
 
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update customer", description = "Updates an existing customer with the provided details")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Customer updated successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid request data"),
-            @ApiResponse(responseCode = "404", description = "Customer not found"),
-            @ApiResponse(responseCode = "409", description = "Customer with email already exists")
-    })
+    @Operation(
+            summary = "Update customer",
+            description = "Updates an existing customer with the provided details")
+    @ApiResponses(
+            value = {
+                @ApiResponse(responseCode = "200", description = "Customer updated successfully"),
+                @ApiResponse(responseCode = "400", description = "Invalid request data"),
+                @ApiResponse(responseCode = "404", description = "Customer not found"),
+                @ApiResponse(
+                        responseCode = "409",
+                        description = "Customer with email already exists")
+            })
     public ResponseEntity<CustomerResponse> updateCustomer(
-            @Parameter(description = "Customer ID", required = true)
-            @PathVariable UUID id,
+            @Parameter(description = "Customer ID", required = true) @PathVariable UUID id,
             @Valid @RequestBody UpdateCustomerRequest request) {
         log.info("REST request to update customer: {}", id);
 
-        UpdateCustomerCommand command = new UpdateCustomerCommand(
-                id,
-                request.getName(),
-                request.getEmail(),
-                request.getPhone(),
-                request.getAddress()
-        );
+        UpdateCustomerCommand command =
+                new UpdateCustomerCommand(
+                        id,
+                        request.getName(),
+                        request.getEmail(),
+                        request.getPhone(),
+                        request.getAddress());
 
         CustomerResponse response = updateCustomerHandler.handle(command);
 
@@ -133,13 +149,13 @@ public class CustomerController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete customer", description = "Deletes an existing customer")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Customer deleted successfully"),
-            @ApiResponse(responseCode = "404", description = "Customer not found")
-    })
+    @ApiResponses(
+            value = {
+                @ApiResponse(responseCode = "204", description = "Customer deleted successfully"),
+                @ApiResponse(responseCode = "404", description = "Customer not found")
+            })
     public ResponseEntity<Void> deleteCustomer(
-            @Parameter(description = "Customer ID", required = true)
-            @PathVariable UUID id) {
+            @Parameter(description = "Customer ID", required = true) @PathVariable UUID id) {
         log.info("REST request to delete customer: {}", id);
 
         DeleteCustomerCommand command = new DeleteCustomerCommand(id);

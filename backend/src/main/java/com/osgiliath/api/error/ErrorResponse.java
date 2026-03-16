@@ -2,17 +2,14 @@ package com.osgiliath.api.error;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDateTime;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-import java.util.Map;
-
-/**
- * Standard error response structure
- */
+/** Standard error response structure */
 @Data
 @Builder
 @NoArgsConstructor

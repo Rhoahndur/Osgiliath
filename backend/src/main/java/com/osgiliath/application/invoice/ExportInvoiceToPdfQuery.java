@@ -1,13 +1,10 @@
 package com.osgiliath.application.invoice;
 
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.UUID;
-
-/**
- * Query to export an invoice as PDF
- */
+/** Query to export an invoice as PDF */
 @Getter
 @AllArgsConstructor
 public class ExportInvoiceToPdfQuery {

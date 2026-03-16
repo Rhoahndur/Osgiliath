@@ -27,19 +27,15 @@ public class RegisterHandler {
             throw new IllegalArgumentException("Email already exists");
         }
 
-        User user = new User(
-            command.getUsername(),
-            passwordEncoder.encode(command.getPassword()),
-            command.getEmail()
-        );
+        User user =
+                new User(
+                        command.getUsername(),
+                        passwordEncoder.encode(command.getPassword()),
+                        command.getEmail());
 
         User savedUser = userRepository.save(user);
         log.info("User {} registered successfully", savedUser.getUsername());
 
-        return new UserResponse(
-            savedUser.getId(),
-            savedUser.getUsername(),
-            savedUser.getEmail()
-        );
+        return new UserResponse(savedUser.getId(), savedUser.getUsername(), savedUser.getEmail());
     }
 }

@@ -2,15 +2,11 @@ package com.osgiliath.application.payment.command;
 
 import com.osgiliath.domain.invoice.InvoiceStatus;
 import com.osgiliath.domain.shared.Money;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.UUID;
-
-/**
- * Result of recording a payment
- * Contains both payment and updated invoice information
- */
+/** Result of recording a payment Contains both payment and updated invoice information */
 @Data
 @AllArgsConstructor
 public class RecordPaymentResult {

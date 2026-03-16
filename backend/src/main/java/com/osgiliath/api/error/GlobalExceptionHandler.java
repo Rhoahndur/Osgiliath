@@ -6,6 +6,9 @@ import com.osgiliath.domain.exceptions.InvoiceHasNoLineItemsException;
 import com.osgiliath.domain.exceptions.InvoiceNotSentException;
 import com.osgiliath.domain.shared.DomainException;
 import jakarta.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,13 +17,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-
 /**
- * Global exception handler for REST API
- * Provides consistent error responses across the application
+ * Global exception handler for REST API Provides consistent error responses across the application
  */
 @RestControllerAdvice
 @Slf4j
@@ -28,157 +26,150 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomerHasInvoicesException.class)
     public ResponseEntity<ErrorResponse> handleCustomerHasInvoices(
-            CustomerHasInvoicesException ex,
-            HttpServletRequest request) {
+            CustomerHasInvoicesException ex, HttpServletRequest request) {
         log.error("Customer has invoices: {}", ex.getMessage());
-        ErrorResponse error = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.CONFLICT.value())
-                .error(HttpStatus.CONFLICT.getReasonPhrase())
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
-                .build();
+        ErrorResponse error =
+                ErrorResponse.builder()
+                        .timestamp(LocalDateTime.now())
+                        .status(HttpStatus.CONFLICT.value())
+                        .error(HttpStatus.CONFLICT.getReasonPhrase())
+                        .message(ex.getMessage())
+                        .path(request.getRequestURI())
+                        .build();
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
     @ExceptionHandler(InsufficientBalanceException.class)
     public ResponseEntity<ErrorResponse> handleInsufficientBalance(
-            InsufficientBalanceException ex,
-            HttpServletRequest request) {
+            InsufficientBalanceException ex, HttpServletRequest request) {
         log.error("Insufficient balance: {}", ex.getMessage());
-        ErrorResponse error = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                .error(HttpStatus.UNPROCESSABLE_ENTITY.getReasonPhrase())
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
-                .build();
+        ErrorResponse error =
+                ErrorResponse.builder()
+                        .timestamp(LocalDateTime.now())
+                        .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .error(HttpStatus.UNPROCESSABLE_ENTITY.getReasonPhrase())
+                        .message(ex.getMessage())
+                        .path(request.getRequestURI())
+                        .build();
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
     }
 
     @ExceptionHandler(InvoiceHasNoLineItemsException.class)
     public ResponseEntity<ErrorResponse> handleInvoiceHasNoLineItems(
-            InvoiceHasNoLineItemsException ex,
-            HttpServletRequest request) {
+            InvoiceHasNoLineItemsException ex, HttpServletRequest request) {
         log.error("Invoice has no line items: {}", ex.getMessage());
-        ErrorResponse error = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                .error(HttpStatus.UNPROCESSABLE_ENTITY.getReasonPhrase())
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
-                .build();
+        ErrorResponse error =
+                ErrorResponse.builder()
+                        .timestamp(LocalDateTime.now())
+                        .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .error(HttpStatus.UNPROCESSABLE_ENTITY.getReasonPhrase())
+                        .message(ex.getMessage())
+                        .path(request.getRequestURI())
+                        .build();
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
     }
 
     @ExceptionHandler(InvoiceNotSentException.class)
     public ResponseEntity<ErrorResponse> handleInvoiceNotSent(
-            InvoiceNotSentException ex,
-            HttpServletRequest request) {
+            InvoiceNotSentException ex, HttpServletRequest request) {
         log.error("Invoice not sent: {}", ex.getMessage());
-        ErrorResponse error = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                .error(HttpStatus.UNPROCESSABLE_ENTITY.getReasonPhrase())
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
-                .build();
+        ErrorResponse error =
+                ErrorResponse.builder()
+                        .timestamp(LocalDateTime.now())
+                        .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .error(HttpStatus.UNPROCESSABLE_ENTITY.getReasonPhrase())
+                        .message(ex.getMessage())
+                        .path(request.getRequestURI())
+                        .build();
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
     }
 
-    /**
-     * Handle domain exceptions (business rule violations)
-     */
+    /** Handle domain exceptions (business rule violations) */
     @ExceptionHandler(DomainException.class)
     public ResponseEntity<ErrorResponse> handleDomainException(
-            DomainException ex,
-            HttpServletRequest request) {
+            DomainException ex, HttpServletRequest request) {
         log.error("Domain exception: {}", ex.getMessage());
 
         HttpStatus status = determineStatusForDomainException(ex);
 
-        ErrorResponse error = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(status.value())
-                .error(status.getReasonPhrase())
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
-                .build();
+        ErrorResponse error =
+                ErrorResponse.builder()
+                        .timestamp(LocalDateTime.now())
+                        .status(status.value())
+                        .error(status.getReasonPhrase())
+                        .message(ex.getMessage())
+                        .path(request.getRequestURI())
+                        .build();
 
         return ResponseEntity.status(status).body(error);
     }
 
-    /**
-     * Handle validation errors
-     */
+    /** Handle validation errors */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(
-            MethodArgumentNotValidException ex,
-            HttpServletRequest request) {
+            MethodArgumentNotValidException ex, HttpServletRequest request) {
         log.error("Validation error: {}", ex.getMessage());
 
         Map<String, String> validationErrors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            validationErrors.put(fieldName, errorMessage);
-        });
+        ex.getBindingResult()
+                .getAllErrors()
+                .forEach(
+                        error -> {
+                            String fieldName = ((FieldError) error).getField();
+                            String errorMessage = error.getDefaultMessage();
+                            validationErrors.put(fieldName, errorMessage);
+                        });
 
-        ErrorResponse error = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error("Validation Failed")
-                .message("Request validation failed")
-                .path(request.getRequestURI())
-                .validationErrors(validationErrors)
-                .build();
+        ErrorResponse error =
+                ErrorResponse.builder()
+                        .timestamp(LocalDateTime.now())
+                        .status(HttpStatus.BAD_REQUEST.value())
+                        .error("Validation Failed")
+                        .message("Request validation failed")
+                        .path(request.getRequestURI())
+                        .validationErrors(validationErrors)
+                        .build();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    /**
-     * Handle illegal argument exceptions (usually from value objects)
-     */
+    /** Handle illegal argument exceptions (usually from value objects) */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
-            IllegalArgumentException ex,
-            HttpServletRequest request) {
+            IllegalArgumentException ex, HttpServletRequest request) {
         log.error("Illegal argument: {}", ex.getMessage());
 
-        ErrorResponse error = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error("Bad Request")
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
-                .build();
+        ErrorResponse error =
+                ErrorResponse.builder()
+                        .timestamp(LocalDateTime.now())
+                        .status(HttpStatus.BAD_REQUEST.value())
+                        .error("Bad Request")
+                        .message(ex.getMessage())
+                        .path(request.getRequestURI())
+                        .build();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    /**
-     * Handle all other exceptions
-     */
+    /** Handle all other exceptions */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(
-            Exception ex,
-            HttpServletRequest request) {
+            Exception ex, HttpServletRequest request) {
         log.error("Unexpected error occurred", ex);
 
-        ErrorResponse error = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .error("Internal Server Error")
-                .message("An unexpected error occurred")
-                .path(request.getRequestURI())
-                .build();
+        ErrorResponse error =
+                ErrorResponse.builder()
+                        .timestamp(LocalDateTime.now())
+                        .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                        .error("Internal Server Error")
+                        .message("An unexpected error occurred")
+                        .path(request.getRequestURI())
+                        .build();
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 
-    /**
-     * Determine appropriate HTTP status for domain exceptions
-     */
+    /** Determine appropriate HTTP status for domain exceptions */
     private HttpStatus determineStatusForDomainException(DomainException ex) {
         String message = ex.getMessage().toLowerCase();
 

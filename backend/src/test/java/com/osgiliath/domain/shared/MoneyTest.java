@@ -1,16 +1,12 @@
 package com.osgiliath.domain.shared;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-
-import java.math.BigDecimal;
-
 import static org.assertj.core.api.Assertions.*;
 
-/**
- * Unit tests for Money value object
- * Tests all money operations and validation logic
- */
+import java.math.BigDecimal;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+/** Unit tests for Money value object Tests all money operations and validation logic */
 @DisplayName("Money Value Object")
 class MoneyTest {
 

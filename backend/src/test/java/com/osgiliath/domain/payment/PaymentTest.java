@@ -1,20 +1,16 @@
 package com.osgiliath.domain.payment;
 
-import com.osgiliath.domain.shared.DomainException;
-import com.osgiliath.domain.shared.Money;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.BeforeEach;
-
-import java.time.LocalDate;
-import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.*;
 
-/**
- * Unit tests for Payment aggregate
- * Tests payment validation and business rules
- */
+import com.osgiliath.domain.shared.DomainException;
+import com.osgiliath.domain.shared.Money;
+import java.time.LocalDate;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+/** Unit tests for Payment aggregate Tests payment validation and business rules */
 @DisplayName("Payment Aggregate")
 class PaymentTest {
 
@@ -36,13 +32,8 @@ class PaymentTest {
     @Test
     @DisplayName("Should create payment with valid data")
     void shouldCreatePaymentWithValidData() {
-        Payment payment = Payment.create(
-                invoiceId,
-                paymentDate,
-                amount,
-                paymentMethod,
-                referenceNumber
-        );
+        Payment payment =
+                Payment.create(invoiceId, paymentDate, amount, paymentMethod, referenceNumber);
 
         assertThat(payment.getInvoiceId()).isEqualTo(invoiceId);
         assertThat(payment.getPaymentDate()).isEqualTo(paymentDate);
@@ -54,13 +45,7 @@ class PaymentTest {
     @Test
     @DisplayName("Should create payment without reference number")
     void shouldCreatePaymentWithoutReferenceNumber() {
-        Payment payment = Payment.create(
-                invoiceId,
-                paymentDate,
-                amount,
-                paymentMethod,
-                null
-        );
+        Payment payment = Payment.create(invoiceId, paymentDate, amount, paymentMethod, null);
 
         assertThat(payment.getReferenceNumber()).isNull();
     }
@@ -68,8 +53,10 @@ class PaymentTest {
     @Test
     @DisplayName("Should create payment with different payment methods")
     void shouldCreatePaymentWithDifferentPaymentMethods() {
-        Payment bankTransfer = Payment.create(invoiceId, paymentDate, amount, PaymentMethod.BANK_TRANSFER, null);
-        Payment creditCard = Payment.create(invoiceId, paymentDate, amount, PaymentMethod.CREDIT_CARD, null);
+        Payment bankTransfer =
+                Payment.create(invoiceId, paymentDate, amount, PaymentMethod.BANK_TRANSFER, null);
+        Payment creditCard =
+                Payment.create(invoiceId, paymentDate, amount, PaymentMethod.CREDIT_CARD, null);
         Payment cash = Payment.create(invoiceId, paymentDate, amount, PaymentMethod.CASH, null);
         Payment check = Payment.create(invoiceId, paymentDate, amount, PaymentMethod.CHECK, null);
 
@@ -82,13 +69,10 @@ class PaymentTest {
     @Test
     @DisplayName("Should fail when invoice ID is null")
     void shouldFailWhenInvoiceIdIsNull() {
-        assertThatThrownBy(() -> Payment.create(
-                null,
-                paymentDate,
-                amount,
-                paymentMethod,
-                referenceNumber
-        ))
+        assertThatThrownBy(
+                        () ->
+                                Payment.create(
+                                        null, paymentDate, amount, paymentMethod, referenceNumber))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("Invoice ID cannot be null");
     }
@@ -96,13 +80,10 @@ class PaymentTest {
     @Test
     @DisplayName("Should fail when payment date is null")
     void shouldFailWhenPaymentDateIsNull() {
-        assertThatThrownBy(() -> Payment.create(
-                invoiceId,
-                null,
-                amount,
-                paymentMethod,
-                referenceNumber
-        ))
+        assertThatThrownBy(
+                        () ->
+                                Payment.create(
+                                        invoiceId, null, amount, paymentMethod, referenceNumber))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("Payment date cannot be null");
     }
@@ -112,13 +93,14 @@ class PaymentTest {
     void shouldFailWhenPaymentDateIsInTheFuture() {
         LocalDate futureDate = LocalDate.now().plusDays(1);
 
-        assertThatThrownBy(() -> Payment.create(
-                invoiceId,
-                futureDate,
-                amount,
-                paymentMethod,
-                referenceNumber
-        ))
+        assertThatThrownBy(
+                        () ->
+                                Payment.create(
+                                        invoiceId,
+                                        futureDate,
+                                        amount,
+                                        paymentMethod,
+                                        referenceNumber))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("Payment date cannot be in the future");
     }
@@ -128,13 +110,7 @@ class PaymentTest {
     void shouldAllowPaymentDateToBeToday() {
         LocalDate today = LocalDate.now();
 
-        Payment payment = Payment.create(
-                invoiceId,
-                today,
-                amount,
-                paymentMethod,
-                referenceNumber
-        );
+        Payment payment = Payment.create(invoiceId, today, amount, paymentMethod, referenceNumber);
 
         assertThat(payment.getPaymentDate()).isEqualTo(today);
     }
@@ -144,13 +120,8 @@ class PaymentTest {
     void shouldAllowPaymentDateInThePast() {
         LocalDate pastDate = LocalDate.now().minusDays(10);
 
-        Payment payment = Payment.create(
-                invoiceId,
-                pastDate,
-                amount,
-                paymentMethod,
-                referenceNumber
-        );
+        Payment payment =
+                Payment.create(invoiceId, pastDate, amount, paymentMethod, referenceNumber);
 
         assertThat(payment.getPaymentDate()).isEqualTo(pastDate);
     }
@@ -158,13 +129,14 @@ class PaymentTest {
     @Test
     @DisplayName("Should fail when amount is null")
     void shouldFailWhenAmountIsNull() {
-        assertThatThrownBy(() -> Payment.create(
-                invoiceId,
-                paymentDate,
-                null,
-                paymentMethod,
-                referenceNumber
-        ))
+        assertThatThrownBy(
+                        () ->
+                                Payment.create(
+                                        invoiceId,
+                                        paymentDate,
+                                        null,
+                                        paymentMethod,
+                                        referenceNumber))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("Payment amount must be greater than zero");
     }
@@ -172,13 +144,14 @@ class PaymentTest {
     @Test
     @DisplayName("Should fail when amount is zero")
     void shouldFailWhenAmountIsZero() {
-        assertThatThrownBy(() -> Payment.create(
-                invoiceId,
-                paymentDate,
-                Money.zero(),
-                paymentMethod,
-                referenceNumber
-        ))
+        assertThatThrownBy(
+                        () ->
+                                Payment.create(
+                                        invoiceId,
+                                        paymentDate,
+                                        Money.zero(),
+                                        paymentMethod,
+                                        referenceNumber))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("Payment amount must be greater than zero");
     }
@@ -188,13 +161,14 @@ class PaymentTest {
     void shouldFailWhenAmountIsNegative() {
         Money negativeAmount = Money.of(-100.0);
 
-        assertThatThrownBy(() -> Payment.create(
-                invoiceId,
-                paymentDate,
-                negativeAmount,
-                paymentMethod,
-                referenceNumber
-        ))
+        assertThatThrownBy(
+                        () ->
+                                Payment.create(
+                                        invoiceId,
+                                        paymentDate,
+                                        negativeAmount,
+                                        paymentMethod,
+                                        referenceNumber))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("Payment amount must be greater than zero");
     }
@@ -204,13 +178,8 @@ class PaymentTest {
     void shouldAcceptSmallPositiveAmounts() {
         Money smallAmount = Money.of(0.01);
 
-        Payment payment = Payment.create(
-                invoiceId,
-                paymentDate,
-                smallAmount,
-                paymentMethod,
-                referenceNumber
-        );
+        Payment payment =
+                Payment.create(invoiceId, paymentDate, smallAmount, paymentMethod, referenceNumber);
 
         assertThat(payment.getAmount()).isEqualTo(smallAmount);
     }
@@ -220,13 +189,8 @@ class PaymentTest {
     void shouldAcceptLargeAmounts() {
         Money largeAmount = Money.of(1000000.0);
 
-        Payment payment = Payment.create(
-                invoiceId,
-                paymentDate,
-                largeAmount,
-                paymentMethod,
-                referenceNumber
-        );
+        Payment payment =
+                Payment.create(invoiceId, paymentDate, largeAmount, paymentMethod, referenceNumber);
 
         assertThat(payment.getAmount()).isEqualTo(largeAmount);
     }
@@ -234,13 +198,8 @@ class PaymentTest {
     @Test
     @DisplayName("Should fail when payment method is null")
     void shouldFailWhenPaymentMethodIsNull() {
-        assertThatThrownBy(() -> Payment.create(
-                invoiceId,
-                paymentDate,
-                amount,
-                null,
-                referenceNumber
-        ))
+        assertThatThrownBy(
+                        () -> Payment.create(invoiceId, paymentDate, amount, null, referenceNumber))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("Payment method cannot be null");
     }

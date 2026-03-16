@@ -5,17 +5,13 @@ import com.osgiliath.domain.invoice.Invoice;
 import com.osgiliath.domain.invoice.InvoiceRepository;
 import com.osgiliath.domain.shared.DomainException;
 import com.osgiliath.domain.shared.Money;
+import java.math.BigDecimal;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.UUID;
-
-/**
- * Handler for CreateInvoiceCommand
- * Creates a new invoice with line items
- */
+/** Handler for CreateInvoiceCommand Creates a new invoice with line items */
 @Service
 @RequiredArgsConstructor
 public class CreateInvoiceHandler {
@@ -35,12 +31,12 @@ public class CreateInvoiceHandler {
         String invoiceNumber = invoiceNumberGenerator.generate(command.getIssueDate());
 
         // Create invoice
-        Invoice invoice = Invoice.create(
-                command.getCustomerId(),
-                invoiceNumber,
-                command.getIssueDate(),
-                command.getDueDate()
-        );
+        Invoice invoice =
+                Invoice.create(
+                        command.getCustomerId(),
+                        invoiceNumber,
+                        command.getIssueDate(),
+                        command.getDueDate());
 
         // Add line items
         if (command.getLineItems() != null && !command.getLineItems().isEmpty()) {
@@ -48,8 +44,7 @@ public class CreateInvoiceHandler {
                 invoice.addLineItem(
                         lineItemDto.getDescription(),
                         new BigDecimal(lineItemDto.getQuantity()),
-                        Money.of(new BigDecimal(lineItemDto.getUnitPrice()))
-                );
+                        Money.of(new BigDecimal(lineItemDto.getUnitPrice())));
             }
         }
 

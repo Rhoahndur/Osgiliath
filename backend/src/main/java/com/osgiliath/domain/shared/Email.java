@@ -1,15 +1,12 @@
 package com.osgiliath.domain.shared;
 
 import jakarta.persistence.Embeddable;
+import java.util.Objects;
+import java.util.regex.Pattern;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.Objects;
-import java.util.regex.Pattern;
-
-/**
- * Email value object - ensures email validity
- */
+/** Email value object - ensures email validity */
 @Embeddable
 @Getter
 @NoArgsConstructor

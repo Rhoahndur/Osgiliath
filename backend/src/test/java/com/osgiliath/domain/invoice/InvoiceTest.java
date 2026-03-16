@@ -1,20 +1,18 @@
 package com.osgiliath.domain.invoice;
 
+import static org.assertj.core.api.Assertions.*;
+
 import com.osgiliath.domain.shared.DomainException;
 import com.osgiliath.domain.shared.Money;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.BeforeEach;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests for Invoice aggregate
- * Tests invoice lifecycle, business rules, and state transitions
+ * Unit tests for Invoice aggregate Tests invoice lifecycle, business rules, and state transitions
  */
 @DisplayName("Invoice Aggregate")
 class InvoiceTest {
@@ -102,7 +100,8 @@ class InvoiceTest {
     void shouldFailWhenDueDateIsBeforeIssueDate() {
         LocalDate earlierDueDate = issueDate.minusDays(1);
 
-        assertThatThrownBy(() -> Invoice.create(customerId, invoiceNumber, issueDate, earlierDueDate))
+        assertThatThrownBy(
+                        () -> Invoice.create(customerId, invoiceNumber, issueDate, earlierDueDate))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("Due date cannot be before issue date");
     }
@@ -142,7 +141,8 @@ class InvoiceTest {
         assertThat(invoice.getSubtotal().getAmount()).isEqualByComparingTo("250.00");
         assertThat(invoice.getTaxAmount().getAmount()).isEqualByComparingTo("25.00");
         assertThat(invoice.getTotalAmount().getAmount()).isEqualByComparingTo("275.00");
-        assertThat(invoice.getBalanceDue().getAmount()).isEqualByComparingTo("0.00"); // Draft invoice
+        assertThat(invoice.getBalanceDue().getAmount())
+                .isEqualByComparingTo("0.00"); // Draft invoice
     }
 
     @Test
@@ -152,7 +152,10 @@ class InvoiceTest {
         invoice.addLineItem("Service A", BigDecimal.valueOf(1), Money.of(100.0));
         invoice.send();
 
-        assertThatThrownBy(() -> invoice.addLineItem("Service B", BigDecimal.valueOf(1), Money.of(50.0)))
+        assertThatThrownBy(
+                        () ->
+                                invoice.addLineItem(
+                                        "Service B", BigDecimal.valueOf(1), Money.of(50.0)))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("Cannot add line items to a non-draft invoice");
     }

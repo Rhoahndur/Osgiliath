@@ -1,16 +1,13 @@
 package com.osgiliath.domain.shared;
 
 import jakarta.persistence.Embeddable;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Objects;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-/**
- * Money value object - immutable representation of monetary amounts
- */
+/** Money value object - immutable representation of monetary amounts */
 @Embeddable
 @Getter
 @NoArgsConstructor

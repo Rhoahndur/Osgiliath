@@ -1,40 +1,34 @@
 package com.osgiliath.application.invoice;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import com.osgiliath.domain.invoice.Invoice;
 import com.osgiliath.domain.invoice.InvoiceRepository;
 import com.osgiliath.domain.invoice.InvoiceStatus;
 import com.osgiliath.domain.shared.DomainException;
 import com.osgiliath.domain.shared.Money;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
-/**
- * Unit tests for SendInvoiceHandler
- * Tests state transition logic from DRAFT to SENT
- */
+/** Unit tests for SendInvoiceHandler Tests state transition logic from DRAFT to SENT */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SendInvoiceHandler")
 class SendInvoiceHandlerTest {
 
-    @Mock
-    private InvoiceRepository invoiceRepository;
+    @Mock private InvoiceRepository invoiceRepository;
 
-    @InjectMocks
-    private SendInvoiceHandler handler;
+    @InjectMocks private SendInvoiceHandler handler;
 
     private UUID invoiceId;
     private Invoice invoice;
@@ -43,12 +37,9 @@ class SendInvoiceHandlerTest {
     void setUp() {
         invoiceId = UUID.randomUUID();
         UUID customerId = UUID.randomUUID();
-        invoice = Invoice.create(
-                customerId,
-                "INV-001",
-                LocalDate.now(),
-                LocalDate.now().plusDays(30)
-        );
+        invoice =
+                Invoice.create(
+                        customerId, "INV-001", LocalDate.now(), LocalDate.now().plusDays(30));
         // Add line items so invoice can be sent
         invoice.addLineItem("Service A", BigDecimal.valueOf(1), Money.of(100.0));
     }
@@ -66,10 +57,13 @@ class SendInvoiceHandlerTest {
 
         // Then
         verify(invoiceRepository).findById(invoiceId);
-        verify(invoiceRepository).save(argThat(inv ->
-                inv.getStatus() == InvoiceStatus.SENT &&
-                inv.getBalanceDue().equals(inv.getTotalAmount())
-        ));
+        verify(invoiceRepository)
+                .save(
+                        argThat(
+                                inv ->
+                                        inv.getStatus() == InvoiceStatus.SENT
+                                                && inv.getBalanceDue()
+                                                        .equals(inv.getTotalAmount())));
     }
 
     @Test
@@ -93,12 +87,9 @@ class SendInvoiceHandlerTest {
     void shouldFailWhenInvoiceHasNoLineItems() {
         // Given
         UUID customerId = UUID.randomUUID();
-        Invoice emptyInvoice = Invoice.create(
-                customerId,
-                "INV-002",
-                LocalDate.now(),
-                LocalDate.now().plusDays(30)
-        );
+        Invoice emptyInvoice =
+                Invoice.create(
+                        customerId, "INV-002", LocalDate.now(), LocalDate.now().plusDays(30));
         SendInvoiceCommand command = new SendInvoiceCommand(invoiceId);
 
         when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.of(emptyInvoice));
@@ -142,9 +133,7 @@ class SendInvoiceHandlerTest {
         handler.handle(command);
 
         // Then
-        verify(invoiceRepository).save(argThat(inv ->
-                inv.getBalanceDue().equals(expectedTotal)
-        ));
+        verify(invoiceRepository).save(argThat(inv -> inv.getBalanceDue().equals(expectedTotal)));
     }
 
     @Test
@@ -161,9 +150,7 @@ class SendInvoiceHandlerTest {
         handler.handle(command);
 
         // Then
-        verify(invoiceRepository).save(argThat(inv ->
-                inv.getStatus() == InvoiceStatus.SENT
-        ));
+        verify(invoiceRepository).save(argThat(inv -> inv.getStatus() == InvoiceStatus.SENT));
     }
 
     @Test

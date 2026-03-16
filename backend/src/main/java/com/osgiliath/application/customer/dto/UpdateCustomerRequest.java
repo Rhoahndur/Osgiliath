@@ -8,9 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Request DTO for updating an existing customer
- */
+/** Request DTO for updating an existing customer */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,7 +22,10 @@ public class UpdateCustomerRequest {
 
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
-    @Schema(description = "Customer email address", example = "john.doe@example.com", required = true)
+    @Schema(
+            description = "Customer email address",
+            example = "john.doe@example.com",
+            required = true)
     private String email;
 
     @Size(max = 50, message = "Phone number cannot exceed 50 characters")

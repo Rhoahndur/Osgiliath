@@ -10,10 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Handler for DeleteCustomerCommand
- * Encapsulates business logic for customer deletion
- */
+/** Handler for DeleteCustomerCommand Encapsulates business logic for customer deletion */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -27,14 +24,18 @@ public class DeleteCustomerHandler {
         log.info("Deleting customer with ID: {}", command.getId());
 
         // Find existing customer
-        Customer customer = customerRepository.findById(command.getId())
-                .orElseThrow(() -> new DomainException("Customer not found with ID: " + command.getId()));
+        Customer customer =
+                customerRepository
+                        .findById(command.getId())
+                        .orElseThrow(
+                                () ->
+                                        new DomainException(
+                                                "Customer not found with ID: " + command.getId()));
 
         // Business rule: Cannot delete customer if they have any invoices
         if (invoiceRepository.existsByCustomerId(command.getId())) {
             throw new CustomerHasInvoicesException(
-                    "Cannot delete customer with existing invoices. Please delete or cancel all invoices first."
-            );
+                    "Cannot delete customer with existing invoices. Please delete or cancel all invoices first.");
         }
 
         // Delete customer

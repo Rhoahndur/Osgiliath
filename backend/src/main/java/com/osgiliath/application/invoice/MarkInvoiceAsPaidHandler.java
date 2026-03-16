@@ -7,10 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Handler for MarkInvoiceAsPaidCommand
- * Manually marks invoice as paid (administrative override)
- */
+/** Handler for MarkInvoiceAsPaidCommand Manually marks invoice as paid (administrative override) */
 @Service
 @RequiredArgsConstructor
 public class MarkInvoiceAsPaidHandler {
@@ -19,8 +16,13 @@ public class MarkInvoiceAsPaidHandler {
 
     @Transactional
     public void handle(MarkInvoiceAsPaidCommand command) {
-        Invoice invoice = invoiceRepository.findById(command.getInvoiceId())
-                .orElseThrow(() -> new DomainException("Invoice not found: " + command.getInvoiceId()));
+        Invoice invoice =
+                invoiceRepository
+                        .findById(command.getInvoiceId())
+                        .orElseThrow(
+                                () ->
+                                        new DomainException(
+                                                "Invoice not found: " + command.getInvoiceId()));
 
         invoice.markAsPaid();
         invoiceRepository.save(invoice);

@@ -4,14 +4,11 @@ import com.osgiliath.domain.shared.BaseEntity;
 import com.osgiliath.domain.shared.DomainException;
 import com.osgiliath.domain.shared.Money;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-
-/**
- * LineItem Entity - part of Invoice aggregate
- */
+/** LineItem Entity - part of Invoice aggregate */
 @Entity
 @Table(name = "line_items")
 @Getter

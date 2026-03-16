@@ -1,1 +1,7 @@
-cd frontend && npx lint-staged
+# Frontend: lint + format staged files
+(cd frontend && npx lint-staged)
+
+# Backend: format staged Java files with Spotless
+if git diff --cached --name-only | grep -q '\.java$'; then
+  (cd backend && ./mvnw spotless:apply -q) && git add -u '*.java'
+fi

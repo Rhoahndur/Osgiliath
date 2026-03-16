@@ -7,10 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Handler for UpdateInvoiceCommand
- * Updates invoice details (DRAFT status only)
- */
+/** Handler for UpdateInvoiceCommand Updates invoice details (DRAFT status only) */
 @Service
 @RequiredArgsConstructor
 public class UpdateInvoiceHandler {
@@ -19,8 +16,13 @@ public class UpdateInvoiceHandler {
 
     @Transactional
     public void handle(UpdateInvoiceCommand command) {
-        Invoice invoice = invoiceRepository.findById(command.getInvoiceId())
-                .orElseThrow(() -> new DomainException("Invoice not found: " + command.getInvoiceId()));
+        Invoice invoice =
+                invoiceRepository
+                        .findById(command.getInvoiceId())
+                        .orElseThrow(
+                                () ->
+                                        new DomainException(
+                                                "Invoice not found: " + command.getInvoiceId()));
 
         invoice.update(command.getIssueDate(), command.getDueDate());
         invoiceRepository.save(invoice);

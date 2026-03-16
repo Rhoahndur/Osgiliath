@@ -8,17 +8,14 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @OpenAPIDefinition(
-    info = @Info(
-        title = "Osgiliath API",
-        version = "1.0",
-        description = "Osgiliath ERP System API Documentation"
-    )
-)
+        info =
+                @Info(
+                        title = "Osgiliath API",
+                        version = "1.0",
+                        description = "Osgiliath ERP System API Documentation"))
 @SecurityScheme(
-    name = "bearerAuth",
-    type = SecuritySchemeType.HTTP,
-    scheme = "bearer",
-    bearerFormat = "JWT"
-)
-public class OpenApiConfig {
-}
+        name = "bearerAuth",
+        type = SecuritySchemeType.HTTP,
+        scheme = "bearer",
+        bearerFormat = "JWT")
+public class OpenApiConfig {}

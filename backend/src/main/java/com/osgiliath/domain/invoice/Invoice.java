@@ -5,26 +5,24 @@ import com.osgiliath.domain.shared.BaseEntity;
 import com.osgiliath.domain.shared.DomainException;
 import com.osgiliath.domain.shared.Money;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-/**
- * Invoice Aggregate Root
- * Manages invoice lifecycle and enforces business rules
- */
+/** Invoice Aggregate Root Manages invoice lifecycle and enforces business rules */
 @Entity
-@Table(name = "invoices", indexes = {
-        @Index(name = "idx_invoice_number", columnList = "invoice_number", unique = true),
-        @Index(name = "idx_invoice_customer", columnList = "customer_id"),
-        @Index(name = "idx_invoice_status", columnList = "status"),
-        @Index(name = "idx_invoice_issue_date", columnList = "issue_date")
-})
+@Table(
+        name = "invoices",
+        indexes = {
+            @Index(name = "idx_invoice_number", columnList = "invoice_number", unique = true),
+            @Index(name = "idx_invoice_customer", columnList = "customer_id"),
+            @Index(name = "idx_invoice_status", columnList = "status"),
+            @Index(name = "idx_invoice_issue_date", columnList = "issue_date")
+        })
 @Getter
 @NoArgsConstructor
 public class Invoice extends BaseEntity {
@@ -78,10 +76,9 @@ public class Invoice extends BaseEntity {
         this.balanceDue = Money.zero();
     }
 
-    /**
-     * Factory method to create a new invoice
-     */
-    public static Invoice create(UUID customerId, String invoiceNumber, LocalDate issueDate, LocalDate dueDate) {
+    /** Factory method to create a new invoice */
+    public static Invoice create(
+            UUID customerId, String invoiceNumber, LocalDate issueDate, LocalDate dueDate) {
         validateCustomerId(customerId);
         validateInvoiceNumber(invoiceNumber);
         validateDates(issueDate, dueDate);
@@ -89,9 +86,7 @@ public class Invoice extends BaseEntity {
         return new Invoice(customerId, invoiceNumber, issueDate, dueDate);
     }
 
-    /**
-     * Add a line item to the invoice (only in DRAFT status)
-     */
+    /** Add a line item to the invoice (only in DRAFT status) */
     public void addLineItem(String description, BigDecimal quantity, Money unitPrice) {
         ensureDraftStatus("Cannot add line items to a non-draft invoice");
 
@@ -100,9 +95,7 @@ public class Invoice extends BaseEntity {
         recalculateTotals();
     }
 
-    /**
-     * Remove a line item from the invoice (only in DRAFT status)
-     */
+    /** Remove a line item from the invoice (only in DRAFT status) */
     public void removeLineItem(UUID lineItemId) {
         ensureDraftStatus("Cannot remove line items from a non-draft invoice");
 
@@ -113,9 +106,7 @@ public class Invoice extends BaseEntity {
         recalculateTotals();
     }
 
-    /**
-     * Update invoice details (only in DRAFT status)
-     */
+    /** Update invoice details (only in DRAFT status) */
     public void update(LocalDate issueDate, LocalDate dueDate) {
         ensureDraftStatus("Cannot update a non-draft invoice");
         validateDates(issueDate, dueDate);
@@ -124,9 +115,7 @@ public class Invoice extends BaseEntity {
         this.dueDate = dueDate;
     }
 
-    /**
-     * Send the invoice (transition from DRAFT to SENT)
-     */
+    /** Send the invoice (transition from DRAFT to SENT) */
     public void send() {
         if (status != InvoiceStatus.DRAFT) {
             throw new DomainException("Only draft invoices can be sent");
@@ -139,12 +128,12 @@ public class Invoice extends BaseEntity {
         this.balanceDue = this.totalAmount;
     }
 
-    /**
-     * Apply a payment to the invoice
-     */
+    /** Apply a payment to the invoice */
     public void applyPayment(Money paymentAmount) {
         if (status != InvoiceStatus.SENT && status != InvoiceStatus.OVERDUE) {
-            throw new DomainException("Can only apply payments to SENT or OVERDUE invoices. Current status: " + status);
+            throw new DomainException(
+                    "Can only apply payments to SENT or OVERDUE invoices. Current status: "
+                            + status);
         }
         if (paymentAmount.isNegative() || paymentAmount.isZero()) {
             throw new DomainException("Payment amount must be greater than zero");
@@ -161,20 +150,17 @@ public class Invoice extends BaseEntity {
         }
     }
 
-    /**
-     * Manually mark invoice as paid (administrative override)
-     */
+    /** Manually mark invoice as paid (administrative override) */
     public void markAsPaid() {
         if (status != InvoiceStatus.SENT && status != InvoiceStatus.OVERDUE) {
-            throw new DomainException("Can only mark SENT or OVERDUE invoices as paid. Current status: " + status);
+            throw new DomainException(
+                    "Can only mark SENT or OVERDUE invoices as paid. Current status: " + status);
         }
         this.balanceDue = Money.zero();
         this.status = InvoiceStatus.PAID;
     }
 
-    /**
-     * Cancel the invoice (can be done from DRAFT or SENT status)
-     */
+    /** Cancel the invoice (can be done from DRAFT or SENT status) */
     public void cancel() {
         if (status != InvoiceStatus.DRAFT && status != InvoiceStatus.SENT) {
             throw new DomainException("Can only cancel draft or sent invoices");
@@ -188,20 +174,15 @@ public class Invoice extends BaseEntity {
         }
     }
 
-    /**
-     * Set status directly (for system operations like scheduled tasks)
-     */
+    /** Set status directly (for system operations like scheduled tasks) */
     public void setStatus(InvoiceStatus status) {
         this.status = status;
     }
 
-    /**
-     * Recalculate all totals based on line items
-     */
+    /** Recalculate all totals based on line items */
     private void recalculateTotals() {
-        this.subtotal = lineItems.stream()
-                .map(LineItem::getLineTotal)
-                .reduce(Money.zero(), Money::add);
+        this.subtotal =
+                lineItems.stream().map(LineItem::getLineTotal).reduce(Money.zero(), Money::add);
 
         this.taxAmount = subtotal.multiply(TAX_RATE);
         this.totalAmount = subtotal.add(taxAmount);

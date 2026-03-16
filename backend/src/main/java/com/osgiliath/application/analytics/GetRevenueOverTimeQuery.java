@@ -4,10 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Query to get revenue over time
- * Returns monthly revenue for the last 12 months
- */
+/** Query to get revenue over time Returns monthly revenue for the last 12 months */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

@@ -1,8 +1,8 @@
 # Osgiliath Architecture Diagrams
 
-**Project:** Osgiliath - AI-Assisted Full-Stack ERP Assessment  
-**Date:** November 7, 2025  
-**Version:** 1.0
+**Project:** Osgiliath - AI-Assisted Full-Stack ERP Assessment
+**Date:** March 14, 2026
+**Version:** 1.1
  
 ---
 
@@ -42,9 +42,11 @@ graph TB
     
     subgraph "Infrastructure"
         INFRA[Infrastructure Layer<br/>Repositories & Services]
+        SCHED[Scheduler<br/>Overdue Invoice Detection]
+        EMAIL[Email Service<br/>AWS SES]
         DB[(PostgreSQL Database)]
     end
-    
+
     subgraph "Security"
         AUTH[Spring Security<br/>Authentication]
     end
@@ -56,6 +58,7 @@ graph TB
     APP -->|Business Logic| DOM
     APP -->|Data Access| INFRA
     INFRA -->|SQL| DB
+    SCHED -->|Batch Update| INFRA
     
     style UI fill:#e1f5ff
     style AG fill:#fff4e1
@@ -85,12 +88,15 @@ graph TB
             CMD1[Create Customer]
             CMD2[Create Invoice]
             CMD3[Record Payment]
+            CMD4[Send / Cancel Invoice]
+            CMD5[Mark Invoice Paid]
         end
-        
+
         subgraph "Queries (Read)"
             QRY1[Get Customer]
             QRY2[List Invoices]
             QRY3[Get Balance]
+            QRY4[Analytics / PDF Export]
         end
         
         subgraph "Handlers"
@@ -181,12 +187,12 @@ graph TB
         IA[Invoice Aggregate Root]
         IA --> IID[Invoice ID]
         IA --> INUM[Invoice Number]
-        IA --> ISTAT[Status Enum:<br/>DRAFT/SENT/PAID]
+        IA --> ISTAT[Status Enum:<br/>DRAFT/SENT/PAID/<br/>OVERDUE/CANCELLED]
         IA --> IAMT[Amounts]
         IA --> LI[Line Items Collection]
         LI --> LI1[Line Item Entity]
         LI --> LI2[Line Item Entity]
-        IA --> IMETHODS[Business Methods:<br/>- AddLineItem<br/>- CalculateTotal<br/>- Send<br/>- ApplyPayment]
+        IA --> IMETHODS[Business Methods:<br/>- AddLineItem<br/>- CalculateTotal<br/>- Send<br/>- ApplyPayment<br/>- Cancel<br/>- MarkAsPaid]
     end
     
     subgraph "Payment Context"
@@ -237,7 +243,7 @@ erDiagram
         string invoiceNumber
         date issueDate
         date dueDate
-        enum status
+        enum status "DRAFT|SENT|PAID|OVERDUE|CANCELLED"
         decimal total
         decimal balance
     }
@@ -523,7 +529,7 @@ erDiagram
         varchar invoice_number UK
         date issue_date
         date due_date
-        varchar status
+        varchar status "DRAFT|SENT|PAID|OVERDUE|CANCELLED"
         decimal subtotal
         decimal tax_amount
         decimal total_amount
@@ -625,6 +631,10 @@ graph LR
         I6[DELETE /api/invoices/:id/line-items/:itemId]
         I7[POST /api/invoices/:id/send]
         I8[GET /api/invoices/:id/balance]
+        I9[POST /api/invoices/:id/mark-paid]
+        I10[POST /api/invoices/:id/cancel]
+        I11[GET /api/invoices/:id/pdf]
+        I12[DELETE /api/invoices/:id]
     end
     
     subgraph "Payment API"
@@ -635,8 +645,18 @@ graph LR
     
     subgraph "Auth API"
         A1[POST /api/auth/login]
-        A2[POST /api/auth/logout]
+        A2[POST /api/auth/register]
         A3[GET /api/auth/me]
+    end
+
+    subgraph "Analytics API"
+        AN1[GET /api/analytics/status-breakdown]
+        AN2[GET /api/analytics/revenue-over-time]
+        AN3[GET /api/analytics/top-customers]
+    end
+
+    subgraph "Health API"
+        H1[GET /health]
     end
     
     style C1 fill:#ffcdd2
@@ -650,13 +670,22 @@ graph LR
     style I5 fill:#ffcdd2
     style I6 fill:#ffcdd2
     style I7 fill:#ffcdd2
+    style I9 fill:#ffcdd2
+    style I10 fill:#ffcdd2
+    style I12 fill:#ffcdd2
     style I2 fill:#c8e6c9
     style I3 fill:#c8e6c9
     style I8 fill:#c8e6c9
-    
+    style I11 fill:#c8e6c9
+
     style P1 fill:#ffcdd2
     style P2 fill:#c8e6c9
     style P3 fill:#c8e6c9
+
+    style AN1 fill:#c8e6c9
+    style AN2 fill:#c8e6c9
+    style AN3 fill:#c8e6c9
+    style H1 fill:#c8e6c9
 ```
 
 ### API Request/Response Flow
@@ -739,6 +768,7 @@ graph TB
         S2[InvoiceService]
         S3[PaymentService]
         S4[AuthService]
+        S5[AnalyticsService]
     end
     
     subgraph "API Client"
@@ -759,7 +789,7 @@ graph TB
     VM3 -->|Calls| S2
     VM4 -->|Calls| S3
     
-    S1 & S2 & S3 & S4 -->|HTTP| API
+    S1 & S2 & S3 & S4 & S5 -->|HTTP| API
     
     API -->|REST API| BACKEND[Spring Boot Backend]
     
@@ -793,13 +823,14 @@ graph LR
     MODELS --> M1[Customer.ts]
     MODELS --> M2[Invoice.ts]
     MODELS --> M3[Payment.ts]
+    MODELS --> M4[Analytics.ts]
     
     VM --> VM1[CustomerListViewModel.ts]
     VM --> VM2[InvoiceDetailViewModel.ts]
     
     VIEWS --> V1[customers/]
     VIEWS --> V2[invoices/]
-    VIEWS --> V3[payments/]
+    VIEWS --> V3[reports/]
     
     V1 --> V1A[CustomerListView.tsx]
     V1 --> V1B[CustomerFormView.tsx]
@@ -807,6 +838,7 @@ graph LR
     SERVICES --> S1[CustomerService.ts]
     SERVICES --> S2[InvoiceService.ts]
     SERVICES --> S3[ApiClient.ts]
+    SERVICES --> S4a[AnalyticsService.ts]
     
     COMPONENTS --> C1[shared/]
     COMPONENTS --> C2[layout/]
@@ -918,7 +950,7 @@ sequenceDiagram
     DB-->>R: Invoice Entity
     R-->>CH: Invoice
     CH->>D: invoice.applyPayment(amount)
-    D->>D: Validate Status = SENT
+    D->>D: Validate Status = SENT or OVERDUE
     D->>D: Validate Amount <= Balance
     D->>D: Update Balance
     D->>D: Check if Paid (balance = 0)
@@ -938,33 +970,53 @@ sequenceDiagram
 ```mermaid
 stateDiagram-v2
     [*] --> Draft: Create Invoice
-    
+
     Draft --> Draft: Add/Remove Line Items
     Draft --> Draft: Update Details
     Draft --> Sent: Mark as Sent
+    Draft --> Cancelled: Cancel
     Draft --> [*]: Delete Invoice
-    
+
     Sent --> Sent: Record Payment<br/>(if balance > 0)
     Sent --> Paid: Record Payment<br/>(balance becomes 0)
-    
+    Sent --> Paid: Mark as Paid<br/>(administrative)
+    Sent --> Overdue: Scheduled Job<br/>(past due date)
+    Sent --> Cancelled: Cancel
+
+    Overdue --> Overdue: Record Payment<br/>(if balance > 0)
+    Overdue --> Paid: Record Payment<br/>(balance becomes 0)
+    Overdue --> Paid: Mark as Paid<br/>(administrative)
+
     Paid --> [*]: Archive/Complete
-    
+    Cancelled --> [*]: Archive/Complete
+
     note right of Draft
         Can be edited
         Cannot receive payments
         Must have ≥1 line item to send
     end note
-    
+
     note right of Sent
         Cannot be edited
         Can receive payments
         Balance tracked
     end note
-    
+
+    note right of Overdue
+        Auto-set by scheduler
+        when past due date
+        Can still receive payments
+    end note
+
     note right of Paid
         Fully paid (balance = 0)
         No further changes
         Historical record
+    end note
+
+    note right of Cancelled
+        No further changes
+        Cannot receive payments
     end note
 ```
 
@@ -977,27 +1029,57 @@ stateDiagram-v2
 ```mermaid
 graph TB
     subgraph "Developer Machine"
-        IDE[IDE with AI Tools<br/>Cursor/Copilot]
-        
+        IDE[IDE with AI Tools<br/>Claude Code / Cursor]
+
         subgraph "Backend"
             SPRING[Spring Boot<br/>:8080]
-            H2[H2/PostgreSQL<br/>:5432]
         end
-        
+
+        subgraph "Database - Docker"
+            PG[PostgreSQL 15<br/>:5432]
+        end
+
         subgraph "Frontend"
-            REACT[React Dev Server<br/>:3000]
+            REACT[Next.js Dev Server<br/>:3000]
         end
     end
-    
+
     IDE -->|Develops| SPRING
     IDE -->|Develops| REACT
-    SPRING -->|Connects| H2
+    SPRING -->|JDBC| PG
     REACT -->|API Calls| SPRING
-    
+
     style IDE fill:#e1f5ff
     style SPRING fill:#c8e6c9
     style REACT fill:#fff9c4
-    style H2 fill:#e0e0e0
+    style PG fill:#e0e0e0
+```
+
+### Current Production Deployment (Railway + Vercel)
+
+```mermaid
+graph TB
+    subgraph "Client"
+        USER[Web Browser]
+    end
+
+    subgraph "Vercel"
+        NEXT[Next.js Frontend<br/>SSR + Static]
+    end
+
+    subgraph "Railway"
+        DOCKER[Docker Container<br/>Spring Boot<br/>Java 17 JRE]
+        RAILDB[(Railway PostgreSQL<br/>Database)]
+    end
+
+    USER -->|HTTPS| NEXT
+    NEXT -->|REST API| DOCKER
+    DOCKER -->|JDBC| RAILDB
+
+    style USER fill:#e1f5ff
+    style NEXT fill:#fff9c4
+    style DOCKER fill:#c8e6c9
+    style RAILDB fill:#e0e0e0
 ```
 
 ### Production Deployment (AWS Example)
@@ -1218,6 +1300,6 @@ graph TB
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** November 7, 2025  
+**Document Version:** 1.1
+**Last Updated:** March 14, 2026
 **Maintained By:** Osgiliath Development Team

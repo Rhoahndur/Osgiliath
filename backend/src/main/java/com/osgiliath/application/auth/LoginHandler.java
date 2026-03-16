@@ -21,12 +21,10 @@ public class LoginHandler {
 
     public LoginResponse handle(LoginCommand command) {
         try {
-            Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                    command.getUsername(),
-                    command.getPassword()
-                )
-            );
+            Authentication authentication =
+                    authenticationManager.authenticate(
+                            new UsernamePasswordAuthenticationToken(
+                                    command.getUsername(), command.getPassword()));
 
             String token = jwtTokenProvider.generateToken(authentication.getName());
             log.info("User {} logged in successfully", command.getUsername());

@@ -7,14 +7,13 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-/**
- * Customer Aggregate Root
- * Encapsulates customer business logic and invariants
- */
+/** Customer Aggregate Root Encapsulates customer business logic and invariants */
 @Entity
-@Table(name = "customers", indexes = {
-        @Index(name = "idx_customer_email", columnList = "email_address", unique = true)
-})
+@Table(
+        name = "customers",
+        indexes = {
+            @Index(name = "idx_customer_email", columnList = "email_address", unique = true)
+        })
 @Getter
 @NoArgsConstructor
 public class Customer extends BaseEntity {
@@ -23,7 +22,9 @@ public class Customer extends BaseEntity {
     private String name;
 
     @Embedded
-    @AttributeOverride(name = "address", column = @Column(name = "email_address", nullable = false, unique = true))
+    @AttributeOverride(
+            name = "address",
+            column = @Column(name = "email_address", nullable = false, unique = true))
     private Email email;
 
     @Column(name = "phone")
@@ -40,9 +41,7 @@ public class Customer extends BaseEntity {
         this.address = address;
     }
 
-    /**
-     * Factory method to create a new customer
-     */
+    /** Factory method to create a new customer */
     public static Customer create(String name, String emailAddress, String phone, String address) {
         validateName(name);
         Email email = Email.of(emailAddress);
@@ -50,9 +49,7 @@ public class Customer extends BaseEntity {
         return new Customer(name, email, phone, address);
     }
 
-    /**
-     * Update customer information
-     */
+    /** Update customer information */
     public void update(String name, String emailAddress, String phone, String address) {
         validateName(name);
         Email newEmail = Email.of(emailAddress);
@@ -63,9 +60,7 @@ public class Customer extends BaseEntity {
         this.address = address;
     }
 
-    /**
-     * Business rule: Name must not be empty
-     */
+    /** Business rule: Name must not be empty */
     private static void validateName(String name) {
         if (name == null || name.isBlank()) {
             throw new DomainException("Customer name cannot be empty");

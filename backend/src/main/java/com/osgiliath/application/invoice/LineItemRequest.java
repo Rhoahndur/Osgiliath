@@ -7,9 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Request DTO for line item
- */
+/** Request DTO for line item */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

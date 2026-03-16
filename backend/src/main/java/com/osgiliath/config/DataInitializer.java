@@ -10,8 +10,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 /**
- * Initializes default data on application startup.
- * Disabled in production via app.seed.enabled=false.
+ * Initializes default data on application startup. Disabled in production via
+ * app.seed.enabled=false.
  */
 @Component
 @ConditionalOnProperty(name = "app.seed.enabled", havingValue = "true", matchIfMissing = true)
@@ -38,11 +38,7 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         if (userRepository.findByUsername(adminUsername).isEmpty()) {
-            User admin = new User(
-                adminUsername,
-                passwordEncoder.encode(adminPassword),
-                adminEmail
-            );
+            User admin = new User(adminUsername, passwordEncoder.encode(adminPassword), adminEmail);
             userRepository.save(admin);
             log.info("Default admin user created: {}", adminUsername);
         } else {

@@ -10,10 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Handler for UpdateCustomerCommand
- * Encapsulates business logic for customer updates
- */
+/** Handler for UpdateCustomerCommand Encapsulates business logic for customer updates */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -27,23 +24,25 @@ public class UpdateCustomerHandler {
         log.info("Updating customer with ID: {}", command.getId());
 
         // Find existing customer
-        Customer customer = customerRepository.findById(command.getId())
-                .orElseThrow(() -> new DomainException("Customer not found with ID: " + command.getId()));
+        Customer customer =
+                customerRepository
+                        .findById(command.getId())
+                        .orElseThrow(
+                                () ->
+                                        new DomainException(
+                                                "Customer not found with ID: " + command.getId()));
 
         // Check if email is being changed to an existing email
         if (!customer.getEmailAddress().equals(command.getEmail())) {
             if (customerRepository.existsByEmail(command.getEmail())) {
-                throw new DomainException("Customer with email " + command.getEmail() + " already exists");
+                throw new DomainException(
+                        "Customer with email " + command.getEmail() + " already exists");
             }
         }
 
         // Update customer using domain method
         customer.update(
-                command.getName(),
-                command.getEmail(),
-                command.getPhone(),
-                command.getAddress()
-        );
+                command.getName(), command.getEmail(), command.getPhone(), command.getAddress());
 
         // Save updated customer
         Customer updatedCustomer = customerRepository.save(customer);

@@ -1,13 +1,10 @@
 package com.osgiliath.application.invoice;
 
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.UUID;
-
-/**
- * Command to add a line item to an invoice (DRAFT only)
- */
+/** Command to add a line item to an invoice (DRAFT only) */
 @Getter
 @AllArgsConstructor
 public class AddLineItemCommand {

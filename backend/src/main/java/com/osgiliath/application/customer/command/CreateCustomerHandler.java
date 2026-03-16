@@ -10,10 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Handler for CreateCustomerCommand
- * Encapsulates business logic for customer creation
- */
+/** Handler for CreateCustomerCommand Encapsulates business logic for customer creation */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -28,16 +25,17 @@ public class CreateCustomerHandler {
 
         // Check if email already exists
         if (customerRepository.existsByEmail(command.getEmail())) {
-            throw new DomainException("Customer with email " + command.getEmail() + " already exists");
+            throw new DomainException(
+                    "Customer with email " + command.getEmail() + " already exists");
         }
 
         // Create customer using domain factory method
-        Customer customer = Customer.create(
-                command.getName(),
-                command.getEmail(),
-                command.getPhone(),
-                command.getAddress()
-        );
+        Customer customer =
+                Customer.create(
+                        command.getName(),
+                        command.getEmail(),
+                        command.getPhone(),
+                        command.getAddress());
 
         // Save to repository
         Customer savedCustomer = customerRepository.save(customer);

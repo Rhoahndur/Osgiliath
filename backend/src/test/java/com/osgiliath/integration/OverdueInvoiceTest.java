@@ -1,43 +1,45 @@
 package com.osgiliath.integration;
 
+import static org.assertj.core.api.Assertions.*;
+
 import com.osgiliath.BaseIntegrationTest;
 import com.osgiliath.application.invoice.MarkOverdueInvoicesCommand;
 import com.osgiliath.application.invoice.MarkOverdueInvoicesHandler;
 import com.osgiliath.domain.customer.Customer;
 import com.osgiliath.domain.invoice.Invoice;
 import com.osgiliath.domain.invoice.InvoiceStatus;
+import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.time.LocalDate;
-
-import static org.assertj.core.api.Assertions.*;
-
 /**
- * Integration tests for overdue invoice automation
- * Tests the batch job that marks sent invoices as overdue
+ * Integration tests for overdue invoice automation Tests the batch job that marks sent invoices as
+ * overdue
  */
 @DisplayName("Overdue Invoice Test")
 class OverdueInvoiceTest extends BaseIntegrationTest {
 
-    @Autowired
-    private MarkOverdueInvoicesHandler handler;
+    @Autowired private MarkOverdueInvoicesHandler handler;
 
     @Test
     @DisplayName("Should mark sent invoices as overdue when past due date")
     void invoicesBecomeOverdueAfterDueDate() {
         // Create invoice with past due date
-        Customer customer = testDataBuilder.customer()
-                .name("Overdue Test Customer 1")
-                .email("overdue1@example.com")
-                .buildAndSave();
+        Customer customer =
+                testDataBuilder
+                        .customer()
+                        .name("Overdue Test Customer 1")
+                        .email("overdue1@example.com")
+                        .buildAndSave();
 
-        Invoice invoice = testDataBuilder.invoice()
-                .customer(customer)
-                .issueDate(LocalDate.now().minusDays(45))
-                .dueDate(LocalDate.now().minusDays(15))
-                .buildWithLineItemsAndSave();
+        Invoice invoice =
+                testDataBuilder
+                        .invoice()
+                        .customer(customer)
+                        .issueDate(LocalDate.now().minusDays(45))
+                        .dueDate(LocalDate.now().minusDays(15))
+                        .buildWithLineItemsAndSave();
 
         // Send invoice
         invoice.send();
@@ -62,16 +64,20 @@ class OverdueInvoiceTest extends BaseIntegrationTest {
     @DisplayName("Should not mark draft invoices as overdue")
     void draftInvoicesNotMarkedOverdue() {
         // Create DRAFT invoice with past due date
-        Customer customer = testDataBuilder.customer()
-                .name("Draft Overdue Customer")
-                .email("draftoverdue@example.com")
-                .buildAndSave();
+        Customer customer =
+                testDataBuilder
+                        .customer()
+                        .name("Draft Overdue Customer")
+                        .email("draftoverdue@example.com")
+                        .buildAndSave();
 
-        Invoice invoice = testDataBuilder.invoice()
-                .customer(customer)
-                .issueDate(LocalDate.now().minusDays(60))
-                .dueDate(LocalDate.now().minusDays(30))
-                .buildWithLineItemsAndSave();
+        Invoice invoice =
+                testDataBuilder
+                        .invoice()
+                        .customer(customer)
+                        .issueDate(LocalDate.now().minusDays(60))
+                        .dueDate(LocalDate.now().minusDays(30))
+                        .buildWithLineItemsAndSave();
 
         assertThat(invoice.getStatus()).isEqualTo(InvoiceStatus.DRAFT);
         assertThat(invoice.getDueDate()).isBefore(LocalDate.now());
@@ -88,16 +94,20 @@ class OverdueInvoiceTest extends BaseIntegrationTest {
     @DisplayName("Should not mark paid invoices as overdue")
     void paidInvoicesNotMarkedOverdue() {
         // Create invoice with past due date
-        Customer customer = testDataBuilder.customer()
-                .name("Paid Overdue Customer")
-                .email("paidoverdue@example.com")
-                .buildAndSave();
+        Customer customer =
+                testDataBuilder
+                        .customer()
+                        .name("Paid Overdue Customer")
+                        .email("paidoverdue@example.com")
+                        .buildAndSave();
 
-        Invoice invoice = testDataBuilder.invoice()
-                .customer(customer)
-                .issueDate(LocalDate.now().minusDays(60))
-                .dueDate(LocalDate.now().minusDays(30))
-                .buildWithLineItemsAndSave();
+        Invoice invoice =
+                testDataBuilder
+                        .invoice()
+                        .customer(customer)
+                        .issueDate(LocalDate.now().minusDays(60))
+                        .dueDate(LocalDate.now().minusDays(30))
+                        .buildWithLineItemsAndSave();
 
         // Send and mark as paid
         invoice.send();
@@ -120,16 +130,20 @@ class OverdueInvoiceTest extends BaseIntegrationTest {
     @DisplayName("Should not mark cancelled invoices as overdue")
     void cancelledInvoicesNotMarkedOverdue() {
         // Create invoice with past due date
-        Customer customer = testDataBuilder.customer()
-                .name("Cancelled Overdue Customer")
-                .email("cancelledoverdue@example.com")
-                .buildAndSave();
+        Customer customer =
+                testDataBuilder
+                        .customer()
+                        .name("Cancelled Overdue Customer")
+                        .email("cancelledoverdue@example.com")
+                        .buildAndSave();
 
-        Invoice invoice = testDataBuilder.invoice()
-                .customer(customer)
-                .issueDate(LocalDate.now().minusDays(60))
-                .dueDate(LocalDate.now().minusDays(30))
-                .buildWithLineItemsAndSave();
+        Invoice invoice =
+                testDataBuilder
+                        .invoice()
+                        .customer(customer)
+                        .issueDate(LocalDate.now().minusDays(60))
+                        .dueDate(LocalDate.now().minusDays(30))
+                        .buildWithLineItemsAndSave();
 
         // Send and cancel
         invoice.send();
@@ -152,16 +166,20 @@ class OverdueInvoiceTest extends BaseIntegrationTest {
     @DisplayName("Should not mark sent invoices as overdue when due date is in future")
     void sentInvoicesNotOverdueWhenDueDateInFuture() {
         // Create invoice with future due date
-        Customer customer = testDataBuilder.customer()
-                .name("Future Due Customer")
-                .email("futuredue@example.com")
-                .buildAndSave();
+        Customer customer =
+                testDataBuilder
+                        .customer()
+                        .name("Future Due Customer")
+                        .email("futuredue@example.com")
+                        .buildAndSave();
 
-        Invoice invoice = testDataBuilder.invoice()
-                .customer(customer)
-                .issueDate(LocalDate.now())
-                .dueDate(LocalDate.now().plusDays(30))
-                .buildWithLineItemsAndSave();
+        Invoice invoice =
+                testDataBuilder
+                        .invoice()
+                        .customer(customer)
+                        .issueDate(LocalDate.now())
+                        .dueDate(LocalDate.now().plusDays(30))
+                        .buildWithLineItemsAndSave();
 
         // Send invoice
         invoice.send();
@@ -183,57 +201,73 @@ class OverdueInvoiceTest extends BaseIntegrationTest {
     @DisplayName("Should mark multiple sent invoices as overdue in batch")
     void shouldMarkMultipleInvoicesOverdue() {
         // Create multiple customers and invoices
-        Customer customer1 = testDataBuilder.customer()
-                .name("Batch Customer 1")
-                .email("batch1@example.com")
-                .buildAndSave();
+        Customer customer1 =
+                testDataBuilder
+                        .customer()
+                        .name("Batch Customer 1")
+                        .email("batch1@example.com")
+                        .buildAndSave();
 
-        Customer customer2 = testDataBuilder.customer()
-                .name("Batch Customer 2")
-                .email("batch2@example.com")
-                .buildAndSave();
+        Customer customer2 =
+                testDataBuilder
+                        .customer()
+                        .name("Batch Customer 2")
+                        .email("batch2@example.com")
+                        .buildAndSave();
 
-        Customer customer3 = testDataBuilder.customer()
-                .name("Batch Customer 3")
-                .email("batch3@example.com")
-                .buildAndSave();
+        Customer customer3 =
+                testDataBuilder
+                        .customer()
+                        .name("Batch Customer 3")
+                        .email("batch3@example.com")
+                        .buildAndSave();
 
         // Create 3 overdue sent invoices
-        Invoice invoice1 = testDataBuilder.invoice()
-                .customer(customer1)
-                .issueDate(LocalDate.now().minusDays(50))
-                .dueDate(LocalDate.now().minusDays(20))
-                .buildWithLineItemsAndSave();
+        Invoice invoice1 =
+                testDataBuilder
+                        .invoice()
+                        .customer(customer1)
+                        .issueDate(LocalDate.now().minusDays(50))
+                        .dueDate(LocalDate.now().minusDays(20))
+                        .buildWithLineItemsAndSave();
         invoice1.send();
         invoiceRepository.save(invoice1);
 
-        Invoice invoice2 = testDataBuilder.invoice()
-                .customer(customer2)
-                .issueDate(LocalDate.now().minusDays(40))
-                .dueDate(LocalDate.now().minusDays(10))
-                .buildWithLineItemsAndSave();
+        Invoice invoice2 =
+                testDataBuilder
+                        .invoice()
+                        .customer(customer2)
+                        .issueDate(LocalDate.now().minusDays(40))
+                        .dueDate(LocalDate.now().minusDays(10))
+                        .buildWithLineItemsAndSave();
         invoice2.send();
         invoiceRepository.save(invoice2);
 
-        Invoice invoice3 = testDataBuilder.invoice()
-                .customer(customer3)
-                .issueDate(LocalDate.now().minusDays(35))
-                .dueDate(LocalDate.now().minusDays(5))
-                .buildWithLineItemsAndSave();
+        Invoice invoice3 =
+                testDataBuilder
+                        .invoice()
+                        .customer(customer3)
+                        .issueDate(LocalDate.now().minusDays(35))
+                        .dueDate(LocalDate.now().minusDays(5))
+                        .buildWithLineItemsAndSave();
         invoice3.send();
         invoiceRepository.save(invoice3);
 
         // Create 1 sent invoice with future due date (should not be marked)
-        Customer customer4 = testDataBuilder.customer()
-                .name("Batch Customer 4")
-                .email("batch4@example.com")
-                .buildAndSave();
+        Customer customer4 =
+                testDataBuilder
+                        .customer()
+                        .name("Batch Customer 4")
+                        .email("batch4@example.com")
+                        .buildAndSave();
 
-        Invoice invoice4 = testDataBuilder.invoice()
-                .customer(customer4)
-                .issueDate(LocalDate.now())
-                .dueDate(LocalDate.now().plusDays(30))
-                .buildWithLineItemsAndSave();
+        Invoice invoice4 =
+                testDataBuilder
+                        .invoice()
+                        .customer(customer4)
+                        .issueDate(LocalDate.now())
+                        .dueDate(LocalDate.now().plusDays(30))
+                        .buildWithLineItemsAndSave();
         invoice4.send();
         invoiceRepository.save(invoice4);
 
@@ -261,16 +295,20 @@ class OverdueInvoiceTest extends BaseIntegrationTest {
     @DisplayName("Should handle empty result when no invoices are overdue")
     void shouldHandleNoOverdueInvoices() {
         // Create only sent invoices with future due dates
-        Customer customer = testDataBuilder.customer()
-                .name("No Overdue Customer")
-                .email("nooverdue@example.com")
-                .buildAndSave();
+        Customer customer =
+                testDataBuilder
+                        .customer()
+                        .name("No Overdue Customer")
+                        .email("nooverdue@example.com")
+                        .buildAndSave();
 
-        Invoice invoice = testDataBuilder.invoice()
-                .customer(customer)
-                .issueDate(LocalDate.now())
-                .dueDate(LocalDate.now().plusDays(30))
-                .buildWithLineItemsAndSave();
+        Invoice invoice =
+                testDataBuilder
+                        .invoice()
+                        .customer(customer)
+                        .issueDate(LocalDate.now())
+                        .dueDate(LocalDate.now().plusDays(30))
+                        .buildWithLineItemsAndSave();
         invoice.send();
         invoiceRepository.save(invoice);
 
@@ -292,16 +330,20 @@ class OverdueInvoiceTest extends BaseIntegrationTest {
     @DisplayName("Should mark invoice as overdue on exact due date")
     void shouldMarkOverdueOnExactDueDate() {
         // Create invoice with due date = yesterday
-        Customer customer = testDataBuilder.customer()
-                .name("Yesterday Due Customer")
-                .email("yesterday@example.com")
-                .buildAndSave();
+        Customer customer =
+                testDataBuilder
+                        .customer()
+                        .name("Yesterday Due Customer")
+                        .email("yesterday@example.com")
+                        .buildAndSave();
 
-        Invoice invoice = testDataBuilder.invoice()
-                .customer(customer)
-                .issueDate(LocalDate.now().minusDays(30))
-                .dueDate(LocalDate.now().minusDays(1))
-                .buildWithLineItemsAndSave();
+        Invoice invoice =
+                testDataBuilder
+                        .invoice()
+                        .customer(customer)
+                        .issueDate(LocalDate.now().minusDays(30))
+                        .dueDate(LocalDate.now().minusDays(1))
+                        .buildWithLineItemsAndSave();
 
         invoice.send();
         invoiceRepository.save(invoice);

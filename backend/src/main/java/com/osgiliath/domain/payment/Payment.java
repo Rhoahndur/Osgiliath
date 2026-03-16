@@ -4,21 +4,19 @@ import com.osgiliath.domain.shared.BaseEntity;
 import com.osgiliath.domain.shared.DomainException;
 import com.osgiliath.domain.shared.Money;
 import jakarta.persistence.*;
+import java.time.LocalDate;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
-import java.util.UUID;
-
-/**
- * Payment Aggregate Root
- * Represents a payment applied to an invoice
- */
+/** Payment Aggregate Root Represents a payment applied to an invoice */
 @Entity
-@Table(name = "payments", indexes = {
-        @Index(name = "idx_payment_invoice", columnList = "invoice_id"),
-        @Index(name = "idx_payment_date", columnList = "payment_date")
-})
+@Table(
+        name = "payments",
+        indexes = {
+            @Index(name = "idx_payment_invoice", columnList = "invoice_id"),
+            @Index(name = "idx_payment_date", columnList = "payment_date")
+        })
 @Getter
 @NoArgsConstructor
 public class Payment extends BaseEntity {
@@ -40,8 +38,12 @@ public class Payment extends BaseEntity {
     @Column(name = "reference_number", length = 100)
     private String referenceNumber;
 
-    private Payment(UUID invoiceId, LocalDate paymentDate, Money amount,
-                    PaymentMethod paymentMethod, String referenceNumber) {
+    private Payment(
+            UUID invoiceId,
+            LocalDate paymentDate,
+            Money amount,
+            PaymentMethod paymentMethod,
+            String referenceNumber) {
         this.invoiceId = invoiceId;
         this.paymentDate = paymentDate;
         this.amount = amount;
@@ -49,11 +51,13 @@ public class Payment extends BaseEntity {
         this.referenceNumber = referenceNumber;
     }
 
-    /**
-     * Factory method to create a new payment
-     */
-    public static Payment create(UUID invoiceId, LocalDate paymentDate, Money amount,
-                                  PaymentMethod paymentMethod, String referenceNumber) {
+    /** Factory method to create a new payment */
+    public static Payment create(
+            UUID invoiceId,
+            LocalDate paymentDate,
+            Money amount,
+            PaymentMethod paymentMethod,
+            String referenceNumber) {
         validateInvoiceId(invoiceId);
         validatePaymentDate(paymentDate);
         validateAmount(amount);

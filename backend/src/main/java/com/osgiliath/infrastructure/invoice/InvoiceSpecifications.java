@@ -3,25 +3,20 @@ package com.osgiliath.infrastructure.invoice;
 import com.osgiliath.domain.invoice.Invoice;
 import com.osgiliath.domain.invoice.InvoiceStatus;
 import jakarta.persistence.criteria.Predicate;
-import org.springframework.data.jpa.domain.Specification;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.jpa.domain.Specification;
 
 /**
- * JPA Specifications for Invoice queries
- * Uses Criteria API to build type-safe queries that work with nullable parameters
+ * JPA Specifications for Invoice queries Uses Criteria API to build type-safe queries that work
+ * with nullable parameters
  */
 public class InvoiceSpecifications {
 
     public static Specification<Invoice> withFilters(
-            InvoiceStatus status,
-            UUID customerId,
-            LocalDate fromDate,
-            LocalDate toDate
-    ) {
+            InvoiceStatus status, UUID customerId, LocalDate fromDate, LocalDate toDate) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -35,7 +30,8 @@ public class InvoiceSpecifications {
             }
 
             if (fromDate != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("issueDate"), fromDate));
+                predicates.add(
+                        criteriaBuilder.greaterThanOrEqualTo(root.get("issueDate"), fromDate));
             }
 
             if (toDate != null) {

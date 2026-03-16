@@ -3,10 +3,7 @@ package com.osgiliath.domain.customer;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Customer Repository interface (Domain layer)
- * Implementation will be in infrastructure layer
- */
+/** Customer Repository interface (Domain layer) Implementation will be in infrastructure layer */
 public interface CustomerRepository {
 
     Customer save(Customer customer);

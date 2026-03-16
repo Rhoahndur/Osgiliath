@@ -5,8 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Query to get top customers by revenue
- * Returns top N customers ranked by total revenue from paid invoices
+ * Query to get top customers by revenue Returns top N customers ranked by total revenue from paid
+ * invoices
  */
 @Data
 @NoArgsConstructor

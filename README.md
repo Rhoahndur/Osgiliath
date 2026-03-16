@@ -1,6 +1,6 @@
 # Osgiliath
 
-> **🚀 NEW TO THIS PROJECT? [START HERE → SETUP.md](SETUP.md)**
+> **🚀 NEW TO THIS PROJECT? [START HERE → docs/SETUP.md](docs/SETUP.md)**
 > **💡 NO API KEYS OR EXTERNAL SERVICES REQUIRED!**
 > This project runs 100% locally with Docker, Spring Boot, and Next.js.
 
@@ -39,10 +39,13 @@ The system consists of three core bounded contexts:
 - Audit trail with creation and update timestamps
 
 ### Invoice Management
-- Multi-stage invoice lifecycle (Draft → Sent → Paid)
+- Multi-stage invoice lifecycle (Draft → Sent → Paid/Overdue → Paid)
+- Invoice cancellation support (Draft or Sent invoices)
+- Automated overdue detection via scheduled batch job
 - Dynamic line item management
 - Automatic calculation of subtotals, taxes, and totals
-- Invoice status tracking and business rule enforcement
+- Invoice status tracking across 5 states (DRAFT, SENT, PAID, OVERDUE, CANCELLED)
+- PDF export for invoices
 - Unique invoice numbering system
 - Due date tracking
 
@@ -54,10 +57,16 @@ The system consists of three core bounded contexts:
 - Payment reference tracking
 - Auto-transition to paid status when balance reaches zero
 
+### Analytics & Reporting
+- Invoice status breakdown dashboard
+- Revenue over time tracking
+- Top customers by revenue
+- Interactive charts (Recharts)
+
 ### Authentication & Security
 - JWT-based authentication
 - Secure password storage with BCrypt
-- Session management
+- Stateless session management
 - Protected API endpoints
 - User registration and login
 
@@ -80,11 +89,13 @@ The system consists of three core bounded contexts:
 - **Styling**: Tailwind CSS 3.4
 - **HTTP Client**: Axios
 - **Form Handling**: React Hook Form with Zod validation
+- **Charts**: Recharts 2.10
 - **State Management**: React Hooks
 
 ### DevOps & Infrastructure
 - **Database**: PostgreSQL 15 (Docker)
-- **Containerization**: Docker & Docker Compose
+- **Containerization**: Docker (multi-stage builds) & Docker Compose
+- **Deployment**: Railway (backend), Vercel (frontend)
 - **Version Control**: Git
 
 ## Architecture Highlights
@@ -132,7 +143,7 @@ Before you begin, ensure you have the following installed:
 
 ## Quick Start
 
-**For detailed setup instructions with troubleshooting, see [SETUP.md](SETUP.md)**
+**For detailed setup instructions with troubleshooting, see [docs/SETUP.md](docs/SETUP.md)**
 
 ```bash
 # 1. Clone and enter directory
@@ -159,7 +170,7 @@ npm run dev
 
 **That's it! No API keys needed.** The application creates a test user automatically on first run.
 
-**Having issues?** Check [SETUP.md](SETUP.md) for detailed instructions and troubleshooting.
+**Having issues?** Check [docs/SETUP.md](docs/SETUP.md) for detailed instructions and troubleshooting.
 
 ## Project Structure
 
@@ -170,11 +181,15 @@ Osgiliath/
 │   │   ├── main/
 │   │   │   ├── java/com/osgiliath/
 │   │   │   │   ├── api/           # REST controllers
+│   │   │   │   │   ├── analytics/
 │   │   │   │   │   ├── auth/
 │   │   │   │   │   ├── customer/
+│   │   │   │   │   ├── error/
+│   │   │   │   │   ├── health/
 │   │   │   │   │   ├── invoice/
 │   │   │   │   │   └── payment/
 │   │   │   │   ├── application/   # Commands, queries, handlers, DTOs
+│   │   │   │   │   ├── analytics/
 │   │   │   │   │   ├── auth/
 │   │   │   │   │   ├── customer/
 │   │   │   │   │   │   ├── command/
@@ -188,9 +203,12 @@ Osgiliath/
 │   │   │   │   │   ├── payment/
 │   │   │   │   │   └── shared/
 │   │   │   │   ├── infrastructure/ # JPA repositories, persistence
+│   │   │   │   │   ├── auth/
 │   │   │   │   │   ├── customer/
+│   │   │   │   │   ├── email/
 │   │   │   │   │   ├── invoice/
-│   │   │   │   │   └── payment/
+│   │   │   │   │   ├── payment/
+│   │   │   │   │   └── scheduler/
 │   │   │   │   └── config/        # Security, JWT, OpenAPI config
 │   │   │   └── resources/
 │   │   │       └── application.yml
@@ -202,7 +220,8 @@ Osgiliath/
 │   │   │   ├── login/
 │   │   │   ├── dashboard/
 │   │   │   ├── customers/
-│   │   │   └── invoices/
+│   │   │   ├── invoices/
+│   │   │   └── reports/
 │   │   ├── components/        # Reusable React components
 │   │   │   ├── shared/
 │   │   │   └── layout/
@@ -290,6 +309,7 @@ http://localhost:8080/api/v3/api-docs
 #### Authentication
 - `POST /api/auth/register` - Register new user
 - `POST /api/auth/login` - Login and get JWT token
+- `GET /api/auth/me` - Get current user
 
 #### Customers
 - `POST /api/customers` - Create customer
@@ -300,18 +320,30 @@ http://localhost:8080/api/v3/api-docs
 
 #### Invoices
 - `POST /api/invoices` - Create invoice (draft)
-- `GET /api/invoices` - List invoices (with filters)
+- `GET /api/invoices` - List invoices (with filters: status, customerId, date range)
 - `GET /api/invoices/{id}` - Get invoice by ID
 - `PUT /api/invoices/{id}` - Update invoice
+- `DELETE /api/invoices/{id}` - Delete invoice
 - `POST /api/invoices/{id}/line-items` - Add line item
 - `DELETE /api/invoices/{id}/line-items/{lineItemId}` - Remove line item
-- `POST /api/invoices/{id}/send` - Send invoice
-- `GET /api/invoices/{id}/balance` - Get invoice balance
+- `POST /api/invoices/{id}/send` - Send invoice (DRAFT → SENT)
+- `POST /api/invoices/{id}/mark-paid` - Mark as paid (administrative)
+- `POST /api/invoices/{id}/cancel` - Cancel invoice
+- `GET /api/invoices/{id}/balance` - Get balance information
+- `GET /api/invoices/{id}/pdf` - Export invoice to PDF
 
 #### Payments
 - `POST /api/invoices/{invoiceId}/payments` - Record payment
 - `GET /api/invoices/{invoiceId}/payments` - List payments for invoice
 - `GET /api/payments/{id}` - Get payment by ID
+
+#### Analytics
+- `GET /api/analytics/status-breakdown` - Invoice counts by status
+- `GET /api/analytics/revenue-over-time` - Monthly revenue data
+- `GET /api/analytics/top-customers` - Top customers by revenue
+
+#### Health
+- `GET /health` - Application health check
 
 For detailed API documentation with request/response examples, see [docs/API.md](docs/API.md).
 
@@ -376,6 +408,6 @@ This project is created for educational and assessment purposes.
 
 **Project Status**: Active Development
 **Version**: 1.0.0-SNAPSHOT
-**Last Updated**: November 7, 2025
+**Last Updated**: March 14, 2026
 
 For questions or issues, please refer to the comprehensive documentation in the `docs/` directory or open an issue in the repository.

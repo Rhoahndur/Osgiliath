@@ -7,10 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Handler for RemoveLineItemCommand
- * Removes a line item from an invoice (DRAFT status only)
- */
+/** Handler for RemoveLineItemCommand Removes a line item from an invoice (DRAFT status only) */
 @Service
 @RequiredArgsConstructor
 public class RemoveLineItemHandler {
@@ -19,8 +16,13 @@ public class RemoveLineItemHandler {
 
     @Transactional
     public void handle(RemoveLineItemCommand command) {
-        Invoice invoice = invoiceRepository.findById(command.getInvoiceId())
-                .orElseThrow(() -> new DomainException("Invoice not found: " + command.getInvoiceId()));
+        Invoice invoice =
+                invoiceRepository
+                        .findById(command.getInvoiceId())
+                        .orElseThrow(
+                                () ->
+                                        new DomainException(
+                                                "Invoice not found: " + command.getInvoiceId()));
 
         invoice.removeLineItem(command.getLineItemId());
         invoiceRepository.save(invoice);

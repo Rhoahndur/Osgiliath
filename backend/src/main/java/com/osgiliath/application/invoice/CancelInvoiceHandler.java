@@ -8,8 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Handler for CancelInvoiceCommand
- * Cancels an invoice (only DRAFT or SENT invoices can be cancelled)
+ * Handler for CancelInvoiceCommand Cancels an invoice (only DRAFT or SENT invoices can be
+ * cancelled)
  */
 @Service
 @RequiredArgsConstructor
@@ -19,8 +19,13 @@ public class CancelInvoiceHandler {
 
     @Transactional
     public void handle(CancelInvoiceCommand command) {
-        Invoice invoice = invoiceRepository.findById(command.getInvoiceId())
-                .orElseThrow(() -> new DomainException("Invoice not found: " + command.getInvoiceId()));
+        Invoice invoice =
+                invoiceRepository
+                        .findById(command.getInvoiceId())
+                        .orElseThrow(
+                                () ->
+                                        new DomainException(
+                                                "Invoice not found: " + command.getInvoiceId()));
 
         // The cancel() method in Invoice domain entity handles validation
         // It will throw DomainException if invoice cannot be cancelled (e.g., already PAID)

@@ -4,9 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Command to create a new customer
- */
+/** Command to create a new customer */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

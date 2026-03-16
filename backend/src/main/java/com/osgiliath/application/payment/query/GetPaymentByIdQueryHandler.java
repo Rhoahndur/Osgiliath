@@ -7,9 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Handler for GetPaymentByIdQuery
- */
+/** Handler for GetPaymentByIdQuery */
 @Service
 @RequiredArgsConstructor
 public class GetPaymentByIdQueryHandler {
@@ -18,9 +16,9 @@ public class GetPaymentByIdQueryHandler {
 
     @Transactional(readOnly = true)
     public Payment handle(GetPaymentByIdQuery query) {
-        return paymentRepository.findById(query.getPaymentId())
-                .orElseThrow(() -> new DomainException(
-                        "Payment not found: " + query.getPaymentId()
-                ));
+        return paymentRepository
+                .findById(query.getPaymentId())
+                .orElseThrow(
+                        () -> new DomainException("Payment not found: " + query.getPaymentId()));
     }
 }

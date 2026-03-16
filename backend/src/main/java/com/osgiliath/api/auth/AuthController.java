@@ -2,12 +2,12 @@ package com.osgiliath.api.auth;
 
 import com.osgiliath.application.auth.*;
 import com.osgiliath.application.auth.dto.LoginRequest;
-import com.osgiliath.domain.shared.DomainException;
 import com.osgiliath.application.auth.dto.LoginResponse;
 import com.osgiliath.application.auth.dto.RegisterRequest;
 import com.osgiliath.application.auth.dto.UserResponse;
 import com.osgiliath.domain.auth.User;
 import com.osgiliath.domain.auth.UserRepository;
+import com.osgiliath.domain.shared.DomainException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,33 +40,28 @@ public class AuthController {
     @PostMapping("/register")
     @Operation(summary = "Register new user", description = "Create a new user account")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
-        RegisterCommand command = new RegisterCommand(
-            request.getUsername(),
-            request.getPassword(),
-            request.getEmail()
-        );
+        RegisterCommand command =
+                new RegisterCommand(
+                        request.getUsername(), request.getPassword(), request.getEmail());
         UserResponse response = registerHandler.handle(command);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/me")
     @Operation(
-        summary = "Get current user",
-        description = "Get currently authenticated user information",
-        security = @SecurityRequirement(name = "bearerAuth")
-    )
+            summary = "Get current user",
+            description = "Get currently authenticated user information",
+            security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<UserResponse> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
-        User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new DomainException("User not found: " + username));
+        User user =
+                userRepository
+                        .findByUsername(username)
+                        .orElseThrow(() -> new DomainException("User not found: " + username));
 
-        UserResponse response = new UserResponse(
-            user.getId(),
-            user.getUsername(),
-            user.getEmail()
-        );
+        UserResponse response = new UserResponse(user.getId(), user.getUsername(), user.getEmail());
 
         return ResponseEntity.ok(response);
     }

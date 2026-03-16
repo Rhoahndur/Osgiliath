@@ -1,14 +1,11 @@
 package com.osgiliath.application.customer.command;
 
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
-/**
- * Command to delete a customer
- */
+/** Command to delete a customer */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

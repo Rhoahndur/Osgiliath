@@ -1,14 +1,11 @@
 package com.osgiliath.application.invoice;
 
+import java.time.LocalDate;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.time.LocalDate;
-import java.util.UUID;
-
-/**
- * Command to update an invoice (DRAFT only)
- */
+/** Command to update an invoice (DRAFT only) */
 @Getter
 @AllArgsConstructor
 public class UpdateInvoiceCommand {

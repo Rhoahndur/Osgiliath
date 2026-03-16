@@ -1,16 +1,13 @@
 package com.osgiliath.application.invoice;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-
-/**
- * Response DTO for invoice balance information
- */
+/** Response DTO for invoice balance information */
 @Data
 @Builder
 @NoArgsConstructor

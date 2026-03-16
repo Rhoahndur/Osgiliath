@@ -7,10 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Handler for GetInvoiceBalanceQuery
- * Returns balance information for an invoice
- */
+/** Handler for GetInvoiceBalanceQuery Returns balance information for an invoice */
 @Service
 @RequiredArgsConstructor
 public class GetInvoiceBalanceQueryHandler {
@@ -19,8 +16,13 @@ public class GetInvoiceBalanceQueryHandler {
 
     @Transactional(readOnly = true)
     public InvoiceBalanceResponse handle(GetInvoiceBalanceQuery query) {
-        Invoice invoice = invoiceRepository.findById(query.getInvoiceId())
-                .orElseThrow(() -> new DomainException("Invoice not found: " + query.getInvoiceId()));
+        Invoice invoice =
+                invoiceRepository
+                        .findById(query.getInvoiceId())
+                        .orElseThrow(
+                                () ->
+                                        new DomainException(
+                                                "Invoice not found: " + query.getInvoiceId()));
 
         return InvoiceBalanceResponse.builder()
                 .invoiceId(invoice.getId())

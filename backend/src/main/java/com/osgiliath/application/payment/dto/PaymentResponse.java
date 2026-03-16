@@ -3,18 +3,15 @@ package com.osgiliath.application.payment.dto;
 import com.osgiliath.domain.invoice.InvoiceStatus;
 import com.osgiliath.domain.payment.PaymentMethod;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-/**
- * Response DTO for payment operations
- */
+/** Response DTO for payment operations */
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor

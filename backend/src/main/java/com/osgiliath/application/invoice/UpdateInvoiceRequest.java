@@ -3,15 +3,12 @@ package com.osgiliath.application.invoice;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
-
-/**
- * Request DTO for updating an invoice (DRAFT only)
- */
+/** Request DTO for updating an invoice (DRAFT only) */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

@@ -1,8 +1,6 @@
 package com.osgiliath.domain.payment;
 
-/**
- * Payment Method Enum
- */
+/** Payment Method Enum */
 public enum PaymentMethod {
     CASH,
     CREDIT_CARD,
