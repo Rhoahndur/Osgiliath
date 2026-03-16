@@ -88,14 +88,16 @@ The system consists of three core bounded contexts:
 - **UI Library**: React 18
 - **Styling**: Tailwind CSS 3.4
 - **HTTP Client**: Axios
-- **Form Handling**: React Hook Form with Zod validation
 - **Charts**: Recharts 2.10
 - **State Management**: React Hooks
 
 ### DevOps & Infrastructure
 - **Database**: PostgreSQL 15 (Docker)
 - **Containerization**: Docker (multi-stage builds) & Docker Compose
+- **CI/CD**: GitHub Actions (build, test, lint, format check)
 - **Deployment**: Railway (backend), Vercel (frontend)
+- **Code Quality**: Prettier + ESLint (frontend), Spotless + Google Java Format (backend)
+- **Pre-commit Hooks**: Husky + lint-staged (auto-format and lint on commit)
 - **Version Control**: Git
 
 ## Architecture Highlights
@@ -267,11 +269,11 @@ cd backend
 # Run all tests
 ./mvnw test
 
-# Run integration tests only
-./mvnw verify -Pintegration-test
+# Run all tests + integration tests + format check
+./mvnw verify
 
-# Run with coverage
-./mvnw test jacoco:report
+# Format code with Spotless
+./mvnw spotless:apply
 ```
 
 ### Frontend Tests
@@ -284,6 +286,15 @@ npm run type-check
 
 # Linting
 npm run lint
+
+# Format check
+npm run format:check
+
+# Format code
+npm run format
+
+# Run unit tests
+npm run test:ci
 ```
 
 ## API Documentation
@@ -408,6 +419,6 @@ This project is created for educational and assessment purposes.
 
 **Project Status**: Active Development
 **Version**: 1.0.0-SNAPSHOT
-**Last Updated**: March 14, 2026
+**Last Updated**: March 16, 2026
 
 For questions or issues, please refer to the comprehensive documentation in the `docs/` directory or open an issue in the repository.
