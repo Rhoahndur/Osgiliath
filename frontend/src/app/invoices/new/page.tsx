@@ -13,13 +13,22 @@ import { formatCurrency, normalizeNumberInput } from '@/utils/format';
 
 export default function NewInvoicePage() {
   const router = useRouter();
-  const { createInvoice, loading, error, validationErrors, lineItems, addLineItem, removeLineItem, updateLineItem } = useInvoiceFormViewModel();
+  const {
+    createInvoice,
+    loading,
+    error,
+    validationErrors,
+    lineItems,
+    addLineItem,
+    removeLineItem,
+    updateLineItem,
+  } = useInvoiceFormViewModel();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [formData, setFormData] = useState({
     customerId: '',
     issueDate: new Date().toISOString().split('T')[0],
     dueDate: '',
-    taxRate: '0'
+    taxRate: '0',
   });
 
   useEffect(() => {
@@ -41,7 +50,7 @@ export default function NewInvoicePage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -49,11 +58,15 @@ export default function NewInvoicePage() {
     addLineItem({
       description: '',
       quantity: 1,
-      unitPrice: 0
+      unitPrice: 0,
     });
   };
 
-  const handleLineItemChange = (index: number, field: keyof CreateLineItemRequest, value: string | number) => {
+  const handleLineItemChange = (
+    index: number,
+    field: keyof CreateLineItemRequest,
+    value: string | number
+  ) => {
     const updatedItem = { ...lineItems[index], [field]: value };
     updateLineItem(index, updatedItem);
   };
@@ -67,7 +80,7 @@ export default function NewInvoicePage() {
         issueDate: formData.issueDate,
         dueDate: formData.dueDate,
         taxRate: parseFloat(formData.taxRate),
-        lineItems: lineItems
+        lineItems: lineItems,
       };
 
       await createInvoice(invoiceData);
@@ -79,7 +92,7 @@ export default function NewInvoicePage() {
   };
 
   const calculateTotal = () => {
-    const subtotal = lineItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    const subtotal = lineItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
     const taxAmount = subtotal * (parseFloat(formData.taxRate) / 100);
     return subtotal + taxAmount;
   };
@@ -106,7 +119,7 @@ export default function NewInvoicePage() {
                 error={validationErrors.customerId}
                 options={[
                   { value: '', label: 'Select a customer' },
-                  ...customers.map(c => ({ value: c.id.toString(), label: c.name }))
+                  ...customers.map((c) => ({ value: c.id.toString(), label: c.name })),
                 ]}
                 required
               />
@@ -229,13 +242,20 @@ export default function NewInvoicePage() {
                     <div className="flex justify-between mb-2">
                       <span className="text-sm text-gray-600">Subtotal:</span>
                       <span className="text-sm font-medium">
-                        ${formatCurrency(lineItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0))}
+                        $
+                        {formatCurrency(
+                          lineItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
+                        )}
                       </span>
                     </div>
                     <div className="flex justify-between mb-2">
                       <span className="text-sm text-gray-600">Tax ({formData.taxRate}%):</span>
                       <span className="text-sm font-medium">
-                        ${formatCurrency(lineItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0) * (parseFloat(formData.taxRate) / 100))}
+                        $
+                        {formatCurrency(
+                          lineItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0) *
+                            (parseFloat(formData.taxRate) / 100)
+                        )}
                       </span>
                     </div>
                     <div className="flex justify-between border-t pt-2">
@@ -250,11 +270,7 @@ export default function NewInvoicePage() {
             )}
 
             <div className="flex justify-end space-x-3 border-t pt-6">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => router.push('/invoices')}
-              >
+              <Button type="button" variant="secondary" onClick={() => router.push('/invoices')}>
                 Cancel
               </Button>
               <Button type="submit" variant="primary" disabled={loading}>

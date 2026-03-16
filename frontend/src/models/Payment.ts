@@ -13,7 +13,7 @@ export enum PaymentMethod {
   CHECK = 'CHECK',
   CREDIT_CARD = 'CREDIT_CARD',
   BANK_TRANSFER = 'BANK_TRANSFER',
-  OTHER = 'OTHER'
+  OTHER = 'OTHER',
 }
 
 export interface CreatePaymentRequest {

@@ -35,21 +35,13 @@ function RootLayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {!isLoginPage && user && (
-        <Navigation onLogout={logout} userName={user.username} />
-      )}
-      <main>
-        {children}
-      </main>
+      {!isLoginPage && user && <Navigation onLogout={logout} userName={user.username} />}
+      <main>{children}</main>
     </div>
   );
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>

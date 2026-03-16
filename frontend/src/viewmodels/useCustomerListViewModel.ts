@@ -22,12 +22,17 @@ export const useCustomerListViewModel = () => {
       setLoading(true);
       setError(null);
       // Spring Data uses 0-based page numbers, but UI uses 1-based
-      const response = await customerService.getCustomers(page - 1, pageSize, searchTerm || undefined);
+      const response = await customerService.getCustomers(
+        page - 1,
+        pageSize,
+        searchTerm || undefined
+      );
       // Handle Spring Page response structure (content, totalElements)
       setCustomers(response.content || []);
       setTotal(response.totalElements || 0);
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to load customers';
+    } catch (err) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      const errorMessage = axiosErr.response?.data?.message || 'Failed to load customers';
       setError(errorMessage);
       setCustomers([]); // Set empty array on error
     } finally {
@@ -45,8 +50,9 @@ export const useCustomerListViewModel = () => {
       setError(null);
       await customerService.deleteCustomer(id);
       await loadCustomers();
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to delete customer';
+    } catch (err) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      const errorMessage = axiosErr.response?.data?.message || 'Failed to delete customer';
       setError(errorMessage);
       throw new Error(errorMessage);
     }
@@ -77,6 +83,6 @@ export const useCustomerListViewModel = () => {
     refreshCustomers: loadCustomers,
     nextPage,
     prevPage,
-    handleSearch
+    handleSearch,
   };
 };

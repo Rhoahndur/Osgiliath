@@ -24,8 +24,9 @@ export const useCustomerFormViewModel = (customerId?: string) => {
       setError(null);
       const data = await customerService.getCustomer(customerId);
       setCustomer(data);
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to load customer';
+    } catch (err) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      const errorMessage = axiosErr.response?.data?.message || 'Failed to load customer';
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -59,8 +60,9 @@ export const useCustomerFormViewModel = (customerId?: string) => {
       setError(null);
       const newCustomer = await customerService.createCustomer(data);
       return newCustomer;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to create customer';
+    } catch (err) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      const errorMessage = axiosErr.response?.data?.message || 'Failed to create customer';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -79,8 +81,9 @@ export const useCustomerFormViewModel = (customerId?: string) => {
       const updatedCustomer = await customerService.updateCustomer(customerId, data);
       setCustomer(updatedCustomer);
       return updatedCustomer;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to update customer';
+    } catch (err) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      const errorMessage = axiosErr.response?.data?.message || 'Failed to update customer';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -95,6 +98,6 @@ export const useCustomerFormViewModel = (customerId?: string) => {
     validationErrors,
     createCustomer,
     updateCustomer,
-    refreshCustomer: loadCustomer
+    refreshCustomer: loadCustomer,
   };
 };

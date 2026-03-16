@@ -1,9 +1,5 @@
 import apiClient from './apiClient';
-import {
-  MonthlyRevenueDto,
-  TopCustomerDto,
-  InvoiceStatusBreakdown
-} from '@/models/Analytics';
+import { MonthlyRevenueDto, TopCustomerDto, InvoiceStatusBreakdown } from '@/models/Analytics';
 
 export const analyticsService = {
   /**
@@ -12,7 +8,7 @@ export const analyticsService = {
    */
   async getRevenueOverTime(months: number = 12): Promise<MonthlyRevenueDto[]> {
     const response = await apiClient.get<MonthlyRevenueDto[]>('/analytics/revenue-over-time', {
-      params: { months }
+      params: { months },
     });
     return response.data;
   },
@@ -32,8 +28,8 @@ export const analyticsService = {
    */
   async getTopCustomers(limit: number = 10): Promise<TopCustomerDto[]> {
     const response = await apiClient.get<TopCustomerDto[]>('/analytics/top-customers', {
-      params: { limit }
+      params: { limit },
     });
     return response.data;
-  }
+  },
 };

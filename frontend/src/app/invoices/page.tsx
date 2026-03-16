@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/shared/Button';
+import { Modal } from '@/components/shared/Modal';
 import { Table, Pagination } from '@/components/shared/Table';
 import { Select, Input } from '@/components/shared/Input';
 import { useInvoiceListViewModel } from '@/viewmodels/useInvoiceListViewModel';
@@ -36,13 +37,18 @@ export default function InvoicesPage() {
     clearFilters,
     handleSort,
     nextPage,
-    prevPage
+    prevPage,
   } = useInvoiceListViewModel();
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [localFromDate, setLocalFromDate] = useState(fromDateFilter || '');
   const [localToDate, setLocalToDate] = useState(toDateFilter || '');
+  const [confirmDialog, setConfirmDialog] = useState<{
+    message: string;
+    onConfirm: () => Promise<void>;
+  } | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Load customers for dropdown
   useEffect(() => {
@@ -70,14 +76,19 @@ export default function InvoicesPage() {
     }
   }, []);
 
-  const handleSendInvoice = async (id: string) => {
-    if (confirm('Are you sure you want to send this invoice?')) {
-      try {
-        await sendInvoice(id);
-      } catch (err) {
-        alert('Failed to send invoice');
-      }
-    }
+  const handleSendInvoice = (id: string) => {
+    setConfirmDialog({
+      message: 'Are you sure you want to send this invoice?',
+      onConfirm: async () => {
+        try {
+          await sendInvoice(id);
+          setConfirmDialog(null);
+        } catch (err) {
+          setConfirmDialog(null);
+          setErrorMessage('Failed to send invoice');
+        }
+      },
+    });
   };
 
   const handleApplyDateFilter = () => {
@@ -96,27 +107,27 @@ export default function InvoicesPage() {
     {
       key: 'issueDate',
       label: 'Issue Date',
-      render: (value: string) => new Date(value).toLocaleDateString()
+      render: (value: string) => new Date(value).toLocaleDateString(),
     },
     {
       key: 'dueDate',
       label: 'Due Date',
-      render: (value: string) => new Date(value).toLocaleDateString()
+      render: (value: string) => new Date(value).toLocaleDateString(),
     },
     {
       key: 'status',
       label: 'Status',
-      render: (value: InvoiceStatus) => <InvoiceStatusBadge status={value} />
+      render: (value: InvoiceStatus) => <InvoiceStatusBadge status={value} />,
     },
     {
       key: 'totalAmount',
       label: 'Total',
-      render: (value: number) => `$${formatCurrency(value)}`
+      render: (value: number) => `$${formatCurrency(value)}`,
     },
     {
       key: 'balanceDue',
       label: 'Balance',
-      render: (value: number) => `$${formatCurrency(value)}`
+      render: (value: number) => `$${formatCurrency(value)}`,
     },
     {
       key: 'actions',
@@ -147,8 +158,8 @@ export default function InvoicesPage() {
             </Button>
           )}
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -162,6 +173,20 @@ export default function InvoicesPage() {
           </Link>
         }
       />
+
+      {errorMessage && (
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded flex justify-between items-center">
+            <span>{errorMessage}</span>
+            <button
+              onClick={() => setErrorMessage(null)}
+              className="text-red-500 hover:text-red-700 font-bold"
+            >
+              &times;
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters */}
@@ -179,7 +204,12 @@ export default function InvoicesPage() {
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
                 <span>Filters</span>
                 {activeFilterCount > 0 && (
@@ -189,11 +219,7 @@ export default function InvoicesPage() {
                 )}
               </button>
               {activeFilterCount > 0 && (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={handleClearFilters}
-                >
+                <Button size="sm" variant="secondary" onClick={handleClearFilters}>
                   Clear All Filters
                 </Button>
               )}
@@ -214,7 +240,7 @@ export default function InvoicesPage() {
                     { value: InvoiceStatus.SENT, label: 'Sent' },
                     { value: InvoiceStatus.PAID, label: 'Paid' },
                     { value: InvoiceStatus.OVERDUE, label: 'Overdue' },
-                    { value: 'CANCELLED', label: 'Cancelled' }
+                    { value: 'CANCELLED', label: 'Cancelled' },
                   ]}
                 />
                 <Select
@@ -223,10 +249,10 @@ export default function InvoicesPage() {
                   onChange={(e) => filterByCustomer(e.target.value || undefined)}
                   options={[
                     { value: '', label: 'All Customers' },
-                    ...customers.map(customer => ({
+                    ...customers.map((customer) => ({
                       value: customer.id,
-                      label: customer.name
-                    }))
+                      label: customer.name,
+                    })),
                   ]}
                 />
                 <Input
@@ -256,7 +282,7 @@ export default function InvoicesPage() {
                     { value: 'dueDate', label: 'Due Date' },
                     { value: 'invoiceNumber', label: 'Invoice Number' },
                     { value: 'totalAmount', label: 'Total Amount' },
-                    { value: 'status', label: 'Status' }
+                    { value: 'status', label: 'Status' },
                   ]}
                 />
                 <Select
@@ -268,7 +294,7 @@ export default function InvoicesPage() {
                   }}
                   options={[
                     { value: 'DESC', label: 'Descending' },
-                    { value: 'ASC', label: 'Ascending' }
+                    { value: 'ASC', label: 'Ascending' },
                   ]}
                 />
               </div>
@@ -303,6 +329,20 @@ export default function InvoicesPage() {
           </div>
         )}
       </div>
+
+      {confirmDialog && (
+        <Modal isOpen={true} onClose={() => setConfirmDialog(null)} title="Confirm Action">
+          <p className="text-gray-600 mb-6">{confirmDialog.message}</p>
+          <div className="flex justify-end space-x-3">
+            <Button variant="secondary" onClick={() => setConfirmDialog(null)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={confirmDialog.onConfirm}>
+              Confirm
+            </Button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

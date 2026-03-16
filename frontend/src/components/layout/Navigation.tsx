@@ -19,9 +19,7 @@ const NavLink: React.FC<NavLinkProps> = ({ href, children }) => {
       href={href}
       className={clsx(
         'px-3 py-2 rounded-md text-sm font-medium transition-colors',
-        isActive
-          ? 'bg-blue-700 text-white'
-          : 'text-gray-300 hover:bg-blue-600 hover:text-white'
+        isActive ? 'bg-blue-700 text-white' : 'text-gray-300 hover:bg-blue-600 hover:text-white'
       )}
     >
       {children}
@@ -53,11 +51,7 @@ export const Navigation: React.FC<NavigationProps> = ({ onLogout, userName }) =>
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            {displayName && (
-              <span className="text-gray-300 text-sm">
-                Welcome, {displayName}
-              </span>
-            )}
+            {displayName && <span className="text-gray-300 text-sm">Welcome, {displayName}</span>}
             <button
               onClick={onLogout}
               className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-blue-600 hover:text-white transition-colors"

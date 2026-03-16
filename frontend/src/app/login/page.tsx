@@ -13,7 +13,7 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    email: ''
+    email: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,12 +24,12 @@ export default function LoginPage() {
         await register({
           username: formData.username,
           password: formData.password,
-          email: formData.email
+          email: formData.email,
         });
       } else {
         await login({
           username: formData.username,
-          password: formData.password
+          password: formData.password,
         });
       }
       // Redirect to dashboard after successful login
@@ -42,7 +42,7 @@ export default function LoginPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -94,17 +94,8 @@ export default function LoginPage() {
           )}
 
           <div>
-            <Button
-              type="submit"
-              variant="primary"
-              className="w-full"
-              disabled={loading}
-            >
-              {loading
-                ? 'Please wait...'
-                : isRegistering
-                ? 'Register'
-                : 'Sign in'}
+            <Button type="submit" variant="primary" className="w-full" disabled={loading}>
+              {loading ? 'Please wait...' : isRegistering ? 'Register' : 'Sign in'}
             </Button>
           </div>
 

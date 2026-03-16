@@ -35,8 +35,9 @@ export const useAuthViewModel = () => {
       const currentUser = await authService.getCurrentUser();
       setUser(currentUser);
       return response;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Login failed';
+    } catch (err) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      const errorMessage = axiosErr.response?.data?.message || 'Login failed';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -52,8 +53,9 @@ export const useAuthViewModel = () => {
       const currentUser = await authService.getCurrentUser();
       setUser(currentUser);
       return response;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Registration failed';
+    } catch (err) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      const errorMessage = axiosErr.response?.data?.message || 'Registration failed';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -73,6 +75,6 @@ export const useAuthViewModel = () => {
     login,
     register,
     logout,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
   };
 };

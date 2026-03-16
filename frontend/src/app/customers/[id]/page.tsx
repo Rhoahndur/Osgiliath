@@ -19,7 +19,7 @@ export default function CustomerDetailPage() {
     name: '',
     email: '',
     phone: '',
-    address: ''
+    address: '',
   });
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export default function CustomerDetailPage() {
         name: customer.name,
         email: customer.email,
         phone: customer.phone || '',
-        address: customer.address || ''
+        address: customer.address || '',
       });
     }
   }, [customer]);
@@ -36,7 +36,7 @@ export default function CustomerDetailPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -125,11 +125,7 @@ export default function CustomerDetailPage() {
               />
 
               <div className="flex justify-end space-x-3">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => setIsEditing(false)}
-                >
+                <Button type="button" variant="secondary" onClick={() => setIsEditing(false)}>
                   Cancel
                 </Button>
                 <Button type="submit" variant="primary" disabled={loading}>

@@ -10,7 +10,7 @@ export function formatCurrency(value: number | undefined | null, decimals: numbe
   }
   return value.toLocaleString('en-US', {
     minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals
+    maximumFractionDigits: decimals,
   });
 }
 
@@ -52,3 +52,4 @@ export function normalizeNumberInput(value: string): string {
   // Remove leading zeros
   return removeLeadingZeros(cleaned);
 }
+// test

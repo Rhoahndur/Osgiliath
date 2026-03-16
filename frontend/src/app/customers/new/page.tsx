@@ -15,13 +15,13 @@ export default function NewCustomerPage() {
     name: '',
     email: '',
     phone: '',
-    address: ''
+    address: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -86,11 +86,7 @@ export default function NewCustomerPage() {
             />
 
             <div className="flex justify-end space-x-3">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => router.push('/customers')}
-              >
+              <Button type="button" variant="secondary" onClick={() => router.push('/customers')}>
                 Cancel
               </Button>
               <Button type="submit" variant="primary" disabled={loading}>

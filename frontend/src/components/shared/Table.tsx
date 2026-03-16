@@ -17,13 +17,7 @@ interface TableProps<T> {
   onRowClick?: (row: T) => void;
 }
 
-export function Table<T>({
-  columns,
-  data,
-  keyField,
-  className,
-  onRowClick
-}: TableProps<T>) {
+export function Table<T>({ columns, data, keyField, className, onRowClick }: TableProps<T>) {
   // Ensure data is always an array
   const safeData = data || [];
 
@@ -32,7 +26,7 @@ export function Table<T>({
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            {columns.map(column => (
+            {columns.map((column) => (
               <th
                 key={column.key}
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -45,23 +39,18 @@ export function Table<T>({
         <tbody className="bg-white divide-y divide-gray-200">
           {safeData.length === 0 ? (
             <tr>
-              <td
-                colSpan={columns.length}
-                className="px-6 py-4 text-center text-gray-500"
-              >
+              <td colSpan={columns.length} className="px-6 py-4 text-center text-gray-500">
                 No data available
               </td>
             </tr>
           ) : (
-            safeData.map(row => (
+            safeData.map((row) => (
               <tr
                 key={String(row[keyField])}
                 onClick={() => onRowClick?.(row)}
-                className={clsx(
-                  onRowClick && 'cursor-pointer hover:bg-gray-50'
-                )}
+                className={clsx(onRowClick && 'cursor-pointer hover:bg-gray-50')}
               >
-                {columns.map(column => (
+                {columns.map((column) => (
                   <td
                     key={column.key}
                     className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
@@ -91,7 +80,7 @@ export const Pagination: React.FC<PaginationProps> = ({
   currentPage,
   totalPages,
   onNextPage,
-  onPrevPage
+  onPrevPage,
 }) => {
   return (
     <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6">

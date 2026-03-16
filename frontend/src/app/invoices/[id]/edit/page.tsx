@@ -29,7 +29,7 @@ export default function EditInvoicePage() {
   const [formData, setFormData] = useState({
     customerId: '',
     issueDate: '',
-    dueDate: ''
+    dueDate: '',
   });
 
   useEffect(() => {
@@ -51,17 +51,19 @@ export default function EditInvoicePage() {
       setFormData({
         customerId: data.customerId,
         issueDate: data.issueDate,
-        dueDate: data.dueDate
+        dueDate: data.dueDate,
       });
 
       // Convert existing line items to form format
-      setLineItems(data.lineItems.map(item => ({
-        id: item.id,
-        description: item.description,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        isNew: false
-      })));
+      setLineItems(
+        data.lineItems.map((item) => ({
+          id: item.id,
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          isNew: false,
+        }))
+      );
     } catch (err) {
       console.error('Failed to load invoice:', err);
       setError('Failed to load invoice');
@@ -80,7 +82,7 @@ export default function EditInvoicePage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -91,12 +93,16 @@ export default function EditInvoicePage() {
         description: '',
         quantity: 1,
         unitPrice: 0,
-        isNew: true
-      }
+        isNew: true,
+      },
     ]);
   };
 
-  const handleLineItemChange = (index: number, field: keyof CreateLineItemRequest, value: string | number) => {
+  const handleLineItemChange = (
+    index: number,
+    field: keyof CreateLineItemRequest,
+    value: string | number
+  ) => {
     const updatedItems = [...lineItems];
     updatedItems[index] = { ...updatedItems[index], [field]: value };
     setLineItems(updatedItems);
@@ -130,7 +136,7 @@ export default function EditInvoicePage() {
       await invoiceService.updateInvoice(invoiceId, {
         customerId: formData.customerId,
         issueDate: formData.issueDate,
-        dueDate: formData.dueDate
+        dueDate: formData.dueDate,
       });
 
       // Add new line items
@@ -139,7 +145,7 @@ export default function EditInvoicePage() {
           await invoiceService.addLineItem(invoiceId, {
             description: item.description,
             quantity: item.quantity,
-            unitPrice: item.unitPrice
+            unitPrice: item.unitPrice,
           });
         }
       }
@@ -155,9 +161,9 @@ export default function EditInvoicePage() {
   };
 
   const calculateTotal = () => {
-    const subtotal = lineItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    const subtotal = lineItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
     // Note: Tax rate is fixed at 10% in backend
-    const taxAmount = subtotal * 0.10;
+    const taxAmount = subtotal * 0.1;
     return subtotal + taxAmount;
   };
 
@@ -204,7 +210,7 @@ export default function EditInvoicePage() {
                 onChange={handleChange}
                 options={[
                   { value: '', label: 'Select a customer' },
-                  ...customers.map(c => ({ value: c.id.toString(), label: c.name }))
+                  ...customers.map((c) => ({ value: c.id.toString(), label: c.name })),
                 ]}
                 required
               />
@@ -228,9 +234,7 @@ export default function EditInvoicePage() {
               />
 
               <div className="flex items-end">
-                <p className="text-sm text-gray-600">
-                  Tax Rate: 10% (fixed)
-                </p>
+                <p className="text-sm text-gray-600">Tax Rate: 10% (fixed)</p>
               </div>
             </div>
 
@@ -313,13 +317,20 @@ export default function EditInvoicePage() {
                     <div className="flex justify-between mb-2">
                       <span className="text-sm text-gray-600">Subtotal:</span>
                       <span className="text-sm font-medium">
-                        ${formatCurrency(lineItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0))}
+                        $
+                        {formatCurrency(
+                          lineItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
+                        )}
                       </span>
                     </div>
                     <div className="flex justify-between mb-2">
                       <span className="text-sm text-gray-600">Tax (10%):</span>
                       <span className="text-sm font-medium">
-                        ${formatCurrency(lineItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0) * 0.10)}
+                        $
+                        {formatCurrency(
+                          lineItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0) *
+                            0.1
+                        )}
                       </span>
                     </div>
                     <div className="flex justify-between border-t pt-2">

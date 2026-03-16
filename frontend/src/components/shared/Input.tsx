@@ -22,10 +22,7 @@ export const Input: React.FC<InputProps> = ({
   return (
     <div className="w-full">
       {label && (
-        <label
-          htmlFor={inputId}
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
+        <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 mb-1">
           {label}
         </label>
       )}
@@ -41,12 +38,8 @@ export const Input: React.FC<InputProps> = ({
         )}
         {...props}
       />
-      {error && (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
-      )}
-      {helperText && !error && (
-        <p className="mt-1 text-sm text-gray-500">{helperText}</p>
-      )}
+      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {helperText && !error && <p className="mt-1 text-sm text-gray-500">{helperText}</p>}
     </div>
   );
 };
@@ -70,10 +63,7 @@ export const TextArea: React.FC<TextAreaProps> = ({
   return (
     <div className="w-full">
       {label && (
-        <label
-          htmlFor={textAreaId}
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
+        <label htmlFor={textAreaId} className="block text-sm font-medium text-gray-700 mb-1">
           {label}
         </label>
       )}
@@ -89,12 +79,8 @@ export const TextArea: React.FC<TextAreaProps> = ({
         )}
         {...props}
       />
-      {error && (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
-      )}
-      {helperText && !error && (
-        <p className="mt-1 text-sm text-gray-500">{helperText}</p>
-      )}
+      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {helperText && !error && <p className="mt-1 text-sm text-gray-500">{helperText}</p>}
     </div>
   );
 };
@@ -120,10 +106,7 @@ export const Select: React.FC<SelectProps> = ({
   return (
     <div className="w-full">
       {label && (
-        <label
-          htmlFor={selectId}
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
+        <label htmlFor={selectId} className="block text-sm font-medium text-gray-700 mb-1">
           {label}
         </label>
       )}
@@ -139,18 +122,14 @@ export const Select: React.FC<SelectProps> = ({
         )}
         {...props}
       >
-        {options.map(option => (
+        {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
           </option>
         ))}
       </select>
-      {error && (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
-      )}
-      {helperText && !error && (
-        <p className="mt-1 text-sm text-gray-500">{helperText}</p>
-      )}
+      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {helperText && !error && <p className="mt-1 text-sm text-gray-500">{helperText}</p>}
     </div>
   );
 };

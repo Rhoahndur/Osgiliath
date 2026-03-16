@@ -27,11 +27,7 @@ describe('Input Component', () => {
 
   it('prioritizes error over helper text', () => {
     render(
-      <Input
-        label="Email"
-        error="Email is required"
-        helperText="Enter a valid email address"
-      />
+      <Input label="Email" error="Email is required" helperText="Enter a valid email address" />
     );
     expect(screen.getByText('Email is required')).toBeInTheDocument();
     expect(screen.queryByText('Enter a valid email address')).not.toBeInTheDocument();

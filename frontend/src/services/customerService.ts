@@ -3,17 +3,21 @@ import {
   Customer,
   CreateCustomerRequest,
   UpdateCustomerRequest,
-  CustomerListResponse
+  CustomerListResponse,
 } from '@/models/Customer';
 
 export const customerService = {
-  async getCustomers(page: number = 0, pageSize: number = 10, search?: string): Promise<CustomerListResponse> {
+  async getCustomers(
+    page: number = 0,
+    pageSize: number = 10,
+    search?: string
+  ): Promise<CustomerListResponse> {
     const response = await apiClient.get<CustomerListResponse>('/customers', {
       params: {
         page,
         size: pageSize,
-        ...(search && { search })
-      }
+        ...(search && { search }),
+      },
     });
     return response.data;
   },
@@ -35,5 +39,5 @@ export const customerService = {
 
   async deleteCustomer(id: string): Promise<void> {
     await apiClient.delete(`/customers/${id}`);
-  }
+  },
 };

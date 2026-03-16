@@ -2,11 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { analyticsService } from '@/services/analyticsService';
-import {
-  MonthlyRevenueDto,
-  TopCustomerDto,
-  InvoiceStatusBreakdown
-} from '@/models/Analytics';
+import { MonthlyRevenueDto, TopCustomerDto, InvoiceStatusBreakdown } from '@/models/Analytics';
 import {
   LineChart,
   Line,
@@ -18,17 +14,17 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
 } from 'recharts';
 
 type DateRange = 6 | 12 | 24 | 999;
 
 const STATUS_COLORS: { [key: string]: string } = {
-  DRAFT: '#94a3b8',    // gray
-  SENT: '#3b82f6',     // blue
-  PAID: '#10b981',     // green
-  OVERDUE: '#ef4444',  // red
-  CANCELLED: '#6b7280' // dark gray
+  DRAFT: '#94a3b8', // gray
+  SENT: '#3b82f6', // blue
+  PAID: '#10b981', // green
+  OVERDUE: '#ef4444', // red
+  CANCELLED: '#6b7280', // dark gray
 };
 
 const STATUS_LABELS: { [key: string]: string } = {
@@ -36,7 +32,7 @@ const STATUS_LABELS: { [key: string]: string } = {
   SENT: 'Sent',
   PAID: 'Paid',
   OVERDUE: 'Overdue',
-  CANCELLED: 'Cancelled'
+  CANCELLED: 'Cancelled',
 };
 
 export default function ReportsPage() {
@@ -55,7 +51,7 @@ export default function ReportsPage() {
       const [revenue, status, customers] = await Promise.all([
         analyticsService.getRevenueOverTime(dateRange),
         analyticsService.getStatusBreakdown(),
-        analyticsService.getTopCustomers(10)
+        analyticsService.getTopCustomers(10),
       ]);
 
       setRevenueData(revenue);
@@ -79,7 +75,7 @@ export default function ReportsPage() {
     .map(([status, count]) => ({
       name: STATUS_LABELS[status] || status,
       value: count,
-      status: status
+      status: status,
     }));
 
   // Calculate total revenue
@@ -109,9 +105,7 @@ export default function ReportsPage() {
     return (
       <div className="min-h-screen bg-gray-50 p-8">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-            {error}
-          </div>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">{error}</div>
         </div>
       </div>
     );
@@ -129,28 +123,43 @@ export default function ReportsPage() {
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">Total Revenue</h3>
+            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+              Total Revenue
+            </h3>
             <p className="text-3xl font-bold text-green-600 mt-2">
-              ${totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              $
+              {totalRevenue.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </p>
             <p className="text-sm text-gray-500 mt-1">
               {dateRange === 999
-                ? (revenueData.length > 0 ? 'All time' : 'Last 6 months')
+                ? revenueData.length > 0
+                  ? 'All time'
+                  : 'Last 6 months'
                 : `Last ${dateRange} months`}
             </p>
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">Total Invoices</h3>
+            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+              Total Invoices
+            </h3>
             <p className="text-3xl font-bold text-blue-600 mt-2">{totalInvoices}</p>
             <p className="text-sm text-gray-500 mt-1">All statuses</p>
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">Paid Invoices</h3>
+            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+              Paid Invoices
+            </h3>
             <p className="text-3xl font-bold text-green-600 mt-2">{statusData.PAID || 0}</p>
             <p className="text-sm text-gray-500 mt-1">
-              {totalInvoices > 0 ? `${((statusData.PAID || 0) / totalInvoices * 100).toFixed(1)}%` : '0%'} of total
+              {totalInvoices > 0
+                ? `${(((statusData.PAID || 0) / totalInvoices) * 100).toFixed(1)}%`
+                : '0%'}{' '}
+              of total
             </p>
           </div>
         </div>
@@ -222,7 +231,7 @@ export default function ReportsPage() {
                 <Tooltip
                   formatter={(value: number) => [
                     `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                    'Revenue'
+                    'Revenue',
                   ]}
                 />
                 <Legend />
@@ -256,10 +265,7 @@ export default function ReportsPage() {
                     dataKey="value"
                   >
                     {pieChartData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={STATUS_COLORS[entry.status] || '#94a3b8'}
-                      />
+                      <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.status] || '#94a3b8'} />
                     ))}
                   </Pie>
                   <Tooltip />
@@ -310,13 +316,21 @@ export default function ReportsPage() {
                         {customer.customerName}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
-                        ${customer.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        $
+                        {customer.totalRevenue.toLocaleString('en-US', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {customer.invoiceCount}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        ${(customer.totalRevenue / customer.invoiceCount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        $
+                        {(customer.totalRevenue / customer.invoiceCount).toLocaleString('en-US', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </td>
                     </tr>
                   ))}
@@ -324,9 +338,7 @@ export default function ReportsPage() {
               </table>
             </div>
           ) : (
-            <div className="text-center py-12 text-gray-500">
-              No customer data available
-            </div>
+            <div className="text-center py-12 text-gray-500">No customer data available</div>
           )}
         </div>
       </div>

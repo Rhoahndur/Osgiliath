@@ -86,8 +86,9 @@ export const useInvoiceListViewModel = () => {
         setInvoices(response.content || []);
         setTotal(response.totalElements || 0);
       }
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to load invoices';
+    } catch (err) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      const errorMessage = axiosErr.response?.data?.message || 'Failed to load invoices';
       setError(errorMessage);
       setInvoices([]); // Set empty array on error
     } finally {
@@ -100,8 +101,9 @@ export const useInvoiceListViewModel = () => {
       setError(null);
       await invoiceService.sendInvoice(id);
       await loadInvoices();
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to send invoice';
+    } catch (err) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      const errorMessage = axiosErr.response?.data?.message || 'Failed to send invoice';
       setError(errorMessage);
       throw new Error(errorMessage);
     }
@@ -187,6 +189,6 @@ export const useInvoiceListViewModel = () => {
     handleSort,
     refreshInvoices: loadInvoices,
     nextPage,
-    prevPage
+    prevPage,
   };
 };

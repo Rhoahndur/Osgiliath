@@ -23,12 +23,13 @@ export const usePaymentFormViewModel = (invoiceId: string) => {
       setError(null);
       const [invoiceData, paymentsData] = await Promise.all([
         invoiceService.getInvoice(invoiceId),
-        paymentService.getPayments(invoiceId)
+        paymentService.getPayments(invoiceId),
       ]);
       setInvoice(invoiceData);
       setPayments(paymentsData);
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to load invoice data';
+    } catch (err) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      const errorMessage = axiosErr.response?.data?.message || 'Failed to load invoice data';
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -69,8 +70,9 @@ export const usePaymentFormViewModel = (invoiceId: string) => {
       const payment = await paymentService.recordPayment(invoiceId, data);
       await loadInvoiceAndPayments();
       return payment;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to record payment';
+    } catch (err) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      const errorMessage = axiosErr.response?.data?.message || 'Failed to record payment';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -85,6 +87,6 @@ export const usePaymentFormViewModel = (invoiceId: string) => {
     error,
     validationErrors,
     recordPayment,
-    refreshData: loadInvoiceAndPayments
+    refreshData: loadInvoiceAndPayments,
   };
 };

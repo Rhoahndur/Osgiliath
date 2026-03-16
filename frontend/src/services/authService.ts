@@ -27,5 +27,5 @@ export const authService = {
 
   isAuthenticated(): boolean {
     return !!localStorage.getItem('token');
-  }
+  },
 };

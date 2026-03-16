@@ -18,7 +18,7 @@ export default function DashboardPage() {
     totalInvoices: 0,
     draftInvoices: 0,
     paidInvoices: 0,
-    overdueInvoices: 0
+    overdueInvoices: 0,
   });
   const [recentInvoices, setRecentInvoices] = useState<Invoice[]>([]);
 
@@ -32,7 +32,7 @@ export default function DashboardPage() {
       // Spring Data uses 0-based page numbers
       const [customersResponse, invoicesResponse] = await Promise.all([
         customerService.getCustomers(0, 1),
-        invoiceService.getInvoices(0, 5)
+        invoiceService.getInvoices(0, 5),
       ]);
 
       const allInvoicesResponse = await invoiceService.getInvoices(0, 100);
@@ -42,20 +42,20 @@ export default function DashboardPage() {
       // 2. Spring Page response: { content: [...], totalElements: number }
       const invoices = Array.isArray(allInvoicesResponse)
         ? allInvoicesResponse
-        : (allInvoicesResponse.content || []);
+        : allInvoicesResponse.content || [];
 
       const recentInvoicesData = Array.isArray(invoicesResponse)
         ? invoicesResponse
-        : (invoicesResponse.content || []);
+        : invoicesResponse.content || [];
 
       setStats({
         totalCustomers: customersResponse.totalElements || 0,
         totalInvoices: Array.isArray(allInvoicesResponse)
           ? allInvoicesResponse.length
-          : (allInvoicesResponse.totalElements || 0),
-        draftInvoices: invoices.filter(i => i.status === InvoiceStatus.DRAFT).length,
-        paidInvoices: invoices.filter(i => i.status === InvoiceStatus.PAID).length,
-        overdueInvoices: invoices.filter(i => i.status === InvoiceStatus.OVERDUE).length
+          : allInvoicesResponse.totalElements || 0,
+        draftInvoices: invoices.filter((i) => i.status === InvoiceStatus.DRAFT).length,
+        paidInvoices: invoices.filter((i) => i.status === InvoiceStatus.PAID).length,
+        overdueInvoices: invoices.filter((i) => i.status === InvoiceStatus.OVERDUE).length,
       });
 
       setRecentInvoices(recentInvoicesData);
@@ -107,7 +107,11 @@ export default function DashboardPage() {
           <>
             {/* Stats Grid */}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5 mb-8">
-              <StatCard title="Total Customers" value={stats.totalCustomers} color="text-blue-600" />
+              <StatCard
+                title="Total Customers"
+                value={stats.totalCustomers}
+                color="text-blue-600"
+              />
               <StatCard title="Total Invoices" value={stats.totalInvoices} color="text-gray-900" />
               <StatCard title="Draft" value={stats.draftInvoices} color="text-gray-600" />
               <StatCard title="Paid" value={stats.paidInvoices} color="text-green-600" />
@@ -118,11 +122,11 @@ export default function DashboardPage() {
             <div className="bg-white shadow rounded-lg">
               <div className="px-4 py-5 border-b border-gray-200 sm:px-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">
-                    Recent Invoices
-                  </h3>
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">Recent Invoices</h3>
                   <Link href="/invoices">
-                    <Button variant="secondary" size="sm">View All</Button>
+                    <Button variant="secondary" size="sm">
+                      View All
+                    </Button>
                   </Link>
                 </div>
               </div>
@@ -138,7 +142,7 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <ul className="divide-y divide-gray-200">
-                    {recentInvoices.map(invoice => (
+                    {recentInvoices.map((invoice) => (
                       <li
                         key={invoice.id}
                         onClick={() => router.push(`/invoices/${invoice.id}`)}
@@ -152,13 +156,15 @@ export default function DashboardPage() {
                             <p className="text-sm text-gray-500">{invoice.customerName}</p>
                           </div>
                           <div className="flex items-center space-x-4">
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              invoice.status === InvoiceStatus.PAID
-                                ? 'bg-green-100 text-green-800'
-                                : invoice.status === InvoiceStatus.OVERDUE
-                                ? 'bg-red-100 text-red-800'
-                                : 'bg-gray-100 text-gray-800'
-                            }`}>
+                            <span
+                              className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                invoice.status === InvoiceStatus.PAID
+                                  ? 'bg-green-100 text-green-800'
+                                  : invoice.status === InvoiceStatus.OVERDUE
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-gray-100 text-gray-800'
+                              }`}
+                            >
                               {invoice.status}
                             </span>
                             <p className="text-sm font-semibold text-gray-900">

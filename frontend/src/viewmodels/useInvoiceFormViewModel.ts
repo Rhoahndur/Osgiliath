@@ -7,7 +7,7 @@ import {
   CreateInvoiceRequest,
   CreateLineItemRequest,
   UpdateInvoiceRequest,
-  LineItem
+  LineItem,
 } from '@/models/Invoice';
 
 export const useInvoiceFormViewModel = (invoiceId?: string) => {
@@ -31,13 +31,16 @@ export const useInvoiceFormViewModel = (invoiceId?: string) => {
       setError(null);
       const data = await invoiceService.getInvoice(invoiceId);
       setInvoice(data);
-      setLineItems(data.lineItems.map(item => ({
-        description: item.description,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice
-      })));
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to load invoice';
+      setLineItems(
+        data.lineItems.map((item) => ({
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+        }))
+      );
+    } catch (err) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      const errorMessage = axiosErr.response?.data?.message || 'Failed to load invoice';
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -89,8 +92,9 @@ export const useInvoiceFormViewModel = (invoiceId?: string) => {
       setError(null);
       const newInvoice = await invoiceService.createInvoice(data);
       return newInvoice;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to create invoice';
+    } catch (err) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      const errorMessage = axiosErr.response?.data?.message || 'Failed to create invoice';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -109,8 +113,9 @@ export const useInvoiceFormViewModel = (invoiceId?: string) => {
       const updatedInvoice = await invoiceService.updateInvoice(invoiceId, data);
       setInvoice(updatedInvoice);
       return updatedInvoice;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to update invoice';
+    } catch (err) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      const errorMessage = axiosErr.response?.data?.message || 'Failed to update invoice';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -142,8 +147,9 @@ export const useInvoiceFormViewModel = (invoiceId?: string) => {
       setError(null);
       await invoiceService.addLineItem(invoiceId, item);
       await loadInvoice();
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to add line item';
+    } catch (err) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      const errorMessage = axiosErr.response?.data?.message || 'Failed to add line item';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -161,8 +167,9 @@ export const useInvoiceFormViewModel = (invoiceId?: string) => {
       setError(null);
       await invoiceService.deleteLineItem(invoiceId, lineItemId);
       await loadInvoice();
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to delete line item';
+    } catch (err) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      const errorMessage = axiosErr.response?.data?.message || 'Failed to delete line item';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -183,6 +190,6 @@ export const useInvoiceFormViewModel = (invoiceId?: string) => {
     updateLineItem,
     addLineItemToExistingInvoice,
     deleteLineItemFromInvoice,
-    refreshInvoice: loadInvoice
+    refreshInvoice: loadInvoice,
   };
 };

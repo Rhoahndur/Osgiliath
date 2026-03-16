@@ -12,7 +12,7 @@ export const InvoiceStatusBadge: React.FC<Props> = ({ status }) => {
     SENT: 'bg-blue-100 text-blue-700',
     PAID: 'bg-green-100 text-green-700',
     OVERDUE: 'bg-red-100 text-red-700',
-    CANCELLED: 'bg-gray-500 text-white'
+    CANCELLED: 'bg-gray-500 text-white',
   };
 
   return (

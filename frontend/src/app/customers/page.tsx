@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/shared/Button';
+import { Modal } from '@/components/shared/Modal';
 import { Input } from '@/components/shared/Input';
 import { Table, Pagination } from '@/components/shared/Table';
 import { useCustomerListViewModel } from '@/viewmodels/useCustomerListViewModel';
@@ -22,10 +23,15 @@ export default function CustomersPage() {
     deleteCustomer,
     nextPage,
     prevPage,
-    handleSearch
+    handleSearch,
   } = useCustomerListViewModel();
 
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    message: string;
+    onConfirm: () => Promise<void>;
+  } | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -37,14 +43,19 @@ export default function CustomersPage() {
     handleSearch(localSearchTerm);
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this customer?')) {
-      try {
-        await deleteCustomer(id);
-      } catch (err) {
-        alert('Failed to delete customer');
-      }
-    }
+  const handleDelete = (id: string) => {
+    setConfirmDialog({
+      message: 'Are you sure you want to delete this customer?',
+      onConfirm: async () => {
+        try {
+          await deleteCustomer(id);
+          setConfirmDialog(null);
+        } catch (err) {
+          setConfirmDialog(null);
+          setErrorMessage('Failed to delete customer');
+        }
+      },
+    });
   };
 
   const columns = [
@@ -78,8 +89,8 @@ export default function CustomersPage() {
             Delete
           </Button>
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -93,6 +104,20 @@ export default function CustomersPage() {
           </Link>
         }
       />
+
+      {errorMessage && (
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded flex justify-between items-center">
+            <span>{errorMessage}</span>
+            <button
+              onClick={() => setErrorMessage(null)}
+              className="text-red-500 hover:text-red-700 font-bold"
+            >
+              &times;
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search Bar */}
@@ -156,6 +181,20 @@ export default function CustomersPage() {
           </div>
         )}
       </div>
+
+      {confirmDialog && (
+        <Modal isOpen={true} onClose={() => setConfirmDialog(null)} title="Confirm Action">
+          <p className="text-gray-600 mb-6">{confirmDialog.message}</p>
+          <div className="flex justify-end space-x-3">
+            <Button variant="secondary" onClick={() => setConfirmDialog(null)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={confirmDialog.onConfirm}>
+              Confirm
+            </Button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

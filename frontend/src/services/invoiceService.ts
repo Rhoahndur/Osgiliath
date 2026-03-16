@@ -5,7 +5,7 @@ import {
   UpdateInvoiceRequest,
   InvoiceListResponse,
   CreateLineItemRequest,
-  LineItem
+  LineItem,
 } from '@/models/Invoice';
 
 export const invoiceService = {
@@ -28,8 +28,8 @@ export const invoiceService = {
         ...(fromDate && { fromDate }),
         ...(toDate && { toDate }),
         ...(sortBy && { sortBy }),
-        ...(sortDirection && { sortDirection })
-      }
+        ...(sortDirection && { sortDirection }),
+      },
     });
     return response.data;
   },
@@ -69,10 +69,7 @@ export const invoiceService = {
   },
 
   async addLineItem(invoiceId: string, lineItem: CreateLineItemRequest): Promise<LineItem> {
-    const response = await apiClient.post<LineItem>(
-      `/invoices/${invoiceId}/line-items`,
-      lineItem
-    );
+    const response = await apiClient.post<LineItem>(`/invoices/${invoiceId}/line-items`, lineItem);
     return response.data;
   },
 
@@ -82,7 +79,7 @@ export const invoiceService = {
 
   async exportInvoiceToPdf(id: string, invoiceNumber: string): Promise<void> {
     const response = await apiClient.get(`/invoices/${id}/pdf`, {
-      responseType: 'blob'
+      responseType: 'blob',
     });
 
     // Create a blob from the PDF data
@@ -97,9 +94,9 @@ export const invoiceService = {
           types: [
             {
               description: 'PDF Document',
-              accept: { 'application/pdf': ['.pdf'] }
-            }
-          ]
+              accept: { 'application/pdf': ['.pdf'] },
+            },
+          ],
         });
 
         // Write the file
@@ -107,9 +104,9 @@ export const invoiceService = {
         await writable.write(blob);
         await writable.close();
         return;
-      } catch (err: any) {
+      } catch (err) {
         // User cancelled the dialog or error occurred
-        if (err.name === 'AbortError') {
+        if (err instanceof Error && err.name === 'AbortError') {
           return; // User cancelled, don't show error
         }
         console.error('Error saving file:', err);
@@ -126,5 +123,5 @@ export const invoiceService = {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
-  }
+  },
 };

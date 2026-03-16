@@ -31,9 +31,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const currentUser = await authService.getCurrentUser();
         setUser(currentUser);
       }
-    } catch (err: any) {
+    } catch (err) {
       // Clear invalid token and silently handle auth failures
-      if (err.response?.status === 401 || err.response?.status === 403) {
+      const axiosErr = err as { response?: { status?: number } };
+      if (axiosErr.response?.status === 401 || axiosErr.response?.status === 403) {
         localStorage.removeItem('token');
       } else {
         // Only log unexpected errors
@@ -53,8 +54,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Fetch the current user after successful login
       const currentUser = await authService.getCurrentUser();
       setUser(currentUser);
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Login failed';
+    } catch (err) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      const errorMessage = axiosErr.response?.data?.message || 'Login failed';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -71,13 +73,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Automatically login with the same credentials
       await authService.login({
         username: userData.username,
-        password: userData.password
+        password: userData.password,
       });
       // Fetch the current user after successful login
       const currentUser = await authService.getCurrentUser();
       setUser(currentUser);
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Registration failed';
+    } catch (err) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      const errorMessage = axiosErr.response?.data?.message || 'Registration failed';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -99,7 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         register,
         logout,
-        isAuthenticated: !!user
+        isAuthenticated: !!user,
       }}
     >
       {children}

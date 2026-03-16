@@ -22,6 +22,11 @@ export default function InvoiceDetailPage() {
   const { payments, recordPayment, loading: paymentLoading } = usePaymentFormViewModel(invoiceId);
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    message: string;
+    onConfirm: () => Promise<void>;
+  } | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Get today's date in YYYY-MM-DD format
   const getTodayDate = () => {
@@ -36,51 +41,72 @@ export default function InvoiceDetailPage() {
     amount: 0,
     paymentDate: getTodayDate(),
     paymentMethod: PaymentMethod.CASH,
-    referenceNumber: ''
+    referenceNumber: '',
   });
 
-  const handleSendInvoice = async () => {
-    if (confirm('Are you sure you want to send this invoice?')) {
-      try {
-        await invoiceService.sendInvoice(invoiceId);
-        window.location.reload();
-      } catch (err) {
-        alert('Failed to send invoice');
-      }
-    }
+  const handleSendInvoice = () => {
+    setConfirmDialog({
+      message: 'Are you sure you want to send this invoice?',
+      onConfirm: async () => {
+        try {
+          await invoiceService.sendInvoice(invoiceId);
+          await refreshInvoice();
+          setConfirmDialog(null);
+        } catch (err) {
+          setConfirmDialog(null);
+          setErrorMessage('Failed to send invoice');
+        }
+      },
+    });
   };
 
-  const handleMarkAsPaid = async () => {
-    if (confirm('Are you sure you want to mark this invoice as paid? This will set the balance to zero.')) {
-      try {
-        await invoiceService.markInvoiceAsPaid(invoiceId);
-        window.location.reload();
-      } catch (err) {
-        alert('Failed to mark invoice as paid');
-      }
-    }
+  const handleMarkAsPaid = () => {
+    setConfirmDialog({
+      message:
+        'Are you sure you want to mark this invoice as paid? This will set the balance to zero.',
+      onConfirm: async () => {
+        try {
+          await invoiceService.markInvoiceAsPaid(invoiceId);
+          await refreshInvoice();
+          setConfirmDialog(null);
+        } catch (err) {
+          setConfirmDialog(null);
+          setErrorMessage('Failed to mark invoice as paid');
+        }
+      },
+    });
   };
 
-  const handleCancel = async () => {
-    if (confirm('Are you sure you want to cancel this invoice? This action cannot be undone.')) {
-      try {
-        await invoiceService.cancelInvoice(invoiceId);
-        window.location.reload();
-      } catch (err) {
-        alert('Failed to cancel invoice');
-      }
-    }
+  const handleCancel = () => {
+    setConfirmDialog({
+      message: 'Are you sure you want to cancel this invoice? This action cannot be undone.',
+      onConfirm: async () => {
+        try {
+          await invoiceService.cancelInvoice(invoiceId);
+          await refreshInvoice();
+          setConfirmDialog(null);
+        } catch (err) {
+          setConfirmDialog(null);
+          setErrorMessage('Failed to cancel invoice');
+        }
+      },
+    });
   };
 
-  const handleDelete = async () => {
-    if (confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
-      try {
-        await invoiceService.deleteInvoice(invoiceId);
-        router.push('/invoices');
-      } catch (err) {
-        alert('Failed to delete invoice');
-      }
-    }
+  const handleDelete = () => {
+    setConfirmDialog({
+      message: 'Are you sure you want to delete this invoice? This action cannot be undone.',
+      onConfirm: async () => {
+        try {
+          await invoiceService.deleteInvoice(invoiceId);
+          setConfirmDialog(null);
+          router.push('/invoices');
+        } catch (err) {
+          setConfirmDialog(null);
+          setErrorMessage('Failed to delete invoice');
+        }
+      },
+    });
   };
 
   const handlePaymentSubmit = async (e: React.FormEvent) => {
@@ -94,10 +120,10 @@ export default function InvoiceDetailPage() {
         amount: 0,
         paymentDate: getTodayDate(),
         paymentMethod: PaymentMethod.CASH,
-        referenceNumber: ''
+        referenceNumber: '',
       });
     } catch (err) {
-      alert('Failed to record payment');
+      setErrorMessage('Failed to record payment');
     }
   };
 
@@ -106,7 +132,7 @@ export default function InvoiceDetailPage() {
     try {
       await invoiceService.exportInvoiceToPdf(invoiceId, invoice.invoiceNumber);
     } catch (err) {
-      alert('Failed to export PDF');
+      setErrorMessage('Failed to export PDF');
     }
   };
 
@@ -138,7 +164,10 @@ export default function InvoiceDetailPage() {
             </Button>
             {invoice.status === InvoiceStatus.DRAFT && (
               <>
-                <Button variant="secondary" onClick={() => router.push(`/invoices/${invoiceId}/edit`)}>
+                <Button
+                  variant="secondary"
+                  onClick={() => router.push(`/invoices/${invoiceId}/edit`)}
+                >
                   Edit
                 </Button>
                 <Button variant="success" onClick={handleSendInvoice}>
@@ -149,7 +178,8 @@ export default function InvoiceDetailPage() {
                 </Button>
               </>
             )}
-            {(invoice.status === InvoiceStatus.SENT || invoice.status === InvoiceStatus.OVERDUE) && (
+            {(invoice.status === InvoiceStatus.SENT ||
+              invoice.status === InvoiceStatus.OVERDUE) && (
               <>
                 {invoice.balanceDue > 0 && (
                   <Button variant="primary" onClick={() => setIsPaymentModalOpen(true)}>
@@ -168,6 +198,20 @@ export default function InvoiceDetailPage() {
         }
       />
 
+      {errorMessage && (
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded flex justify-between items-center">
+            <span>{errorMessage}</span>
+            <button
+              onClick={() => setErrorMessage(null)}
+              className="text-red-500 hover:text-red-700 font-bold"
+            >
+              &times;
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white shadow rounded-lg overflow-hidden">
           {/* Invoice Header */}
@@ -175,25 +219,31 @@ export default function InvoiceDetailPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm font-medium text-gray-500">Issue Date</p>
-                <p className="text-sm text-gray-900">{new Date(invoice.issueDate).toLocaleDateString()}</p>
+                <p className="text-sm text-gray-900">
+                  {new Date(invoice.issueDate).toLocaleDateString()}
+                </p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Due Date</p>
-                <p className="text-sm text-gray-900">{new Date(invoice.dueDate).toLocaleDateString()}</p>
+                <p className="text-sm text-gray-900">
+                  {new Date(invoice.dueDate).toLocaleDateString()}
+                </p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Status</p>
-                <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                  invoice.status === InvoiceStatus.PAID
-                    ? 'bg-green-100 text-green-800'
-                    : invoice.status === InvoiceStatus.OVERDUE
-                    ? 'bg-red-100 text-red-800'
-                    : invoice.status === InvoiceStatus.SENT
-                    ? 'bg-blue-100 text-blue-800'
-                    : invoice.status === 'CANCELLED'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
+                <span
+                  className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                    invoice.status === InvoiceStatus.PAID
+                      ? 'bg-green-100 text-green-800'
+                      : invoice.status === InvoiceStatus.OVERDUE
+                        ? 'bg-red-100 text-red-800'
+                        : invoice.status === InvoiceStatus.SENT
+                          ? 'bg-blue-100 text-blue-800'
+                          : invoice.status === 'CANCELLED'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-gray-100 text-gray-800'
+                  }`}
+                >
                   {invoice.status}
                 </span>
               </div>
@@ -206,19 +256,31 @@ export default function InvoiceDetailPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Unit Price</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Description
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                    Quantity
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                    Unit Price
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                    Total
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {invoice.lineItems.map(item => (
+                {invoice.lineItems.map((item) => (
                   <tr key={item.id}>
                     <td className="px-4 py-3 text-sm text-gray-900">{item.description}</td>
                     <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.quantity}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900 text-right">${formatCurrency(item.unitPrice)}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900 text-right font-medium">${formatCurrency(item.lineTotal)}</td>
+                    <td className="px-4 py-3 text-sm text-gray-900 text-right">
+                      ${formatCurrency(item.unitPrice)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900 text-right font-medium">
+                      ${formatCurrency(item.lineTotal)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -239,15 +301,21 @@ export default function InvoiceDetailPage() {
                 </div>
                 <div className="flex justify-between border-t pt-2">
                   <span className="text-base font-semibold">Total:</span>
-                  <span className="text-base font-bold">${formatCurrency(invoice.totalAmount)}</span>
+                  <span className="text-base font-bold">
+                    ${formatCurrency(invoice.totalAmount)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Amount Paid:</span>
-                  <span className="text-sm font-medium text-green-600">${formatCurrency(invoice.totalAmount - invoice.balanceDue)}</span>
+                  <span className="text-sm font-medium text-green-600">
+                    ${formatCurrency(invoice.totalAmount - invoice.balanceDue)}
+                  </span>
                 </div>
                 <div className="flex justify-between border-t pt-2">
                   <span className="text-base font-semibold">Balance Due:</span>
-                  <span className="text-base font-bold text-red-600">${formatCurrency(invoice.balanceDue)}</span>
+                  <span className="text-base font-bold text-red-600">
+                    ${formatCurrency(invoice.balanceDue)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -260,14 +328,22 @@ export default function InvoiceDetailPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Date
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Method
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      Amount
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Reference
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {payments.map(payment => (
+                  {payments.map((payment) => (
                     <tr key={payment.id}>
                       <td className="px-4 py-3 text-sm text-gray-900">
                         {new Date(payment.paymentDate).toLocaleDateString()}
@@ -276,7 +352,9 @@ export default function InvoiceDetailPage() {
                       <td className="px-4 py-3 text-sm text-gray-900 text-right font-medium">
                         ${formatCurrency(payment.amount)}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">{payment.referenceNumber || '-'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-900">
+                        {payment.referenceNumber || '-'}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -321,10 +399,12 @@ export default function InvoiceDetailPage() {
           <Select
             label="Payment Method"
             value={paymentData.paymentMethod}
-            onChange={(e) => setPaymentData({ ...paymentData, paymentMethod: e.target.value as PaymentMethod })}
-            options={Object.values(PaymentMethod).map(method => ({
+            onChange={(e) =>
+              setPaymentData({ ...paymentData, paymentMethod: e.target.value as PaymentMethod })
+            }
+            options={Object.values(PaymentMethod).map((method) => ({
               value: method,
-              label: method.replace('_', ' ')
+              label: method.replace('_', ' '),
             }))}
             required
           />
@@ -337,11 +417,7 @@ export default function InvoiceDetailPage() {
           />
 
           <div className="flex justify-end space-x-3 pt-4">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setIsPaymentModalOpen(false)}
-            >
+            <Button type="button" variant="secondary" onClick={() => setIsPaymentModalOpen(false)}>
               Cancel
             </Button>
             <Button type="submit" variant="primary" disabled={paymentLoading}>
@@ -350,6 +426,20 @@ export default function InvoiceDetailPage() {
           </div>
         </form>
       </Modal>
+
+      {confirmDialog && (
+        <Modal isOpen={true} onClose={() => setConfirmDialog(null)} title="Confirm Action">
+          <p className="text-gray-600 mb-6">{confirmDialog.message}</p>
+          <div className="flex justify-end space-x-3">
+            <Button variant="secondary" onClick={() => setConfirmDialog(null)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={confirmDialog.onConfirm}>
+              Confirm
+            </Button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
