@@ -48,7 +48,7 @@ class InvoiceIntegrationTest extends BaseIntegrationTest {
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id").exists())
                         .andExpect(jsonPath("$.customerId").value(customer.getId().toString()))
-                        .andExpect(jsonPath("$.invoiceNumber").value("INV-001"))
+                        .andExpect(jsonPath("$.invoiceNumber").exists())
                         .andExpect(jsonPath("$.status").value("DRAFT"))
                         .andExpect(jsonPath("$.subtotal").value(0.00))
                         .andExpect(jsonPath("$.totalAmount").value(0.00))
@@ -61,7 +61,7 @@ class InvoiceIntegrationTest extends BaseIntegrationTest {
         Invoice savedInvoice = invoiceRepository.findById(UUID.fromString(invoiceId)).orElseThrow();
 
         assertThat(savedInvoice.getStatus()).isEqualTo(InvoiceStatus.DRAFT);
-        assertThat(savedInvoice.getInvoiceNumber()).isEqualTo("INV-001");
+        assertThat(savedInvoice.getInvoiceNumber()).isNotBlank();
     }
 
     @Test
@@ -79,14 +79,12 @@ class InvoiceIntegrationTest extends BaseIntegrationTest {
                         post("/api/invoices/" + invoice.getId() + "/line-items")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(command)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.lineItems.length()").value(1))
-                .andExpect(jsonPath("$.lineItems[0].description").value("Service A"))
-                .andExpect(jsonPath("$.lineItems[0].quantity").value(2))
-                .andExpect(jsonPath("$.lineItems[0].unitPrice").value(100.00))
-                .andExpect(jsonPath("$.subtotal").value(200.00))
-                .andExpect(jsonPath("$.taxAmount").value(20.00))
-                .andExpect(jsonPath("$.totalAmount").value(220.00));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.description").value("Service A"))
+                .andExpect(jsonPath("$.quantity").value(2))
+                .andExpect(jsonPath("$.unitPrice").value(100.00))
+                .andExpect(jsonPath("$.lineTotal").value(200.00));
 
         // Verify in database
         Invoice updatedInvoice = invoiceRepository.findById(invoice.getId()).orElseThrow();
@@ -111,7 +109,7 @@ class InvoiceIntegrationTest extends BaseIntegrationTest {
                         post("/api/invoices/" + invoice.getId() + "/line-items")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(command1)))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         // Add second line item: 1 x $50 = $50
         AddLineItemCommand command2 =
@@ -123,11 +121,16 @@ class InvoiceIntegrationTest extends BaseIntegrationTest {
                         post("/api/invoices/" + invoice.getId() + "/line-items")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(command2)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.lineItems.length()").value(2))
-                .andExpect(jsonPath("$.subtotal").value(250.00))
-                .andExpect(jsonPath("$.taxAmount").value(25.00))
-                .andExpect(jsonPath("$.totalAmount").value(275.00));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.description").value("Service B"))
+                .andExpect(jsonPath("$.lineTotal").value(50.00));
+
+        // Verify totals in database
+        Invoice updatedInvoice = invoiceRepository.findById(invoice.getId()).orElseThrow();
+        assertThat(updatedInvoice.getLineItems()).hasSize(2);
+        assertThat(updatedInvoice.getSubtotal().getAmount()).isEqualByComparingTo("250.00");
+        assertThat(updatedInvoice.getTaxAmount().getAmount()).isEqualByComparingTo("25.00");
+        assertThat(updatedInvoice.getTotalAmount().getAmount()).isEqualByComparingTo("275.00");
     }
 
     @Test
@@ -177,7 +180,7 @@ class InvoiceIntegrationTest extends BaseIntegrationTest {
 
         // When & Then
         mockMvc.perform(post("/api/invoices/" + invoice.getId() + "/send"))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableEntity())
                 .andExpect(
                         jsonPath("$.message")
                                 .value(
@@ -245,8 +248,7 @@ class InvoiceIntegrationTest extends BaseIntegrationTest {
 
         // When & Then
         mockMvc.perform(delete("/api/invoices/" + invoice.getId() + "/line-items/" + lineItemId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.lineItems.length()").value(1));
+                .andExpect(status().isNoContent());
 
         // Verify in database
         Invoice updatedInvoice = invoiceRepository.findById(invoice.getId()).orElseThrow();

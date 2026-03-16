@@ -70,7 +70,7 @@ class CustomerIntegrationTest extends BaseIntegrationTest {
                         post("/api/customers")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(command)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isConflict())
                 .andExpect(
                         jsonPath("$.message")
                                 .value(org.hamcrest.Matchers.containsString("already exists")));
@@ -89,9 +89,8 @@ class CustomerIntegrationTest extends BaseIntegrationTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(command)))
                 .andExpect(status().isBadRequest())
-                .andExpect(
-                        jsonPath("$.message")
-                                .value(org.hamcrest.Matchers.containsString("Invalid email")));
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.validationErrors.email").exists());
     }
 
     @Test
@@ -107,11 +106,8 @@ class CustomerIntegrationTest extends BaseIntegrationTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(command)))
                 .andExpect(status().isBadRequest())
-                .andExpect(
-                        jsonPath("$.message")
-                                .value(
-                                        org.hamcrest.Matchers.containsString(
-                                                "name cannot be empty")));
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.validationErrors.name").exists());
     }
 
     @Test
@@ -154,10 +150,11 @@ class CustomerIntegrationTest extends BaseIntegrationTest {
         // When & Then
         mockMvc.perform(get("/api/customers"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(3))
-                .andExpect(jsonPath("$[0].name").exists())
-                .andExpect(jsonPath("$[1].name").exists())
-                .andExpect(jsonPath("$[2].name").exists());
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.length()").value(3))
+                .andExpect(jsonPath("$.content[0].name").exists())
+                .andExpect(jsonPath("$.content[1].name").exists())
+                .andExpect(jsonPath("$.content[2].name").exists());
     }
 
     @Test

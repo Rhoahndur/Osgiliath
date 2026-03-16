@@ -27,6 +27,7 @@ public class GetInvoiceBalanceQueryHandler {
         return InvoiceBalanceResponse.builder()
                 .invoiceId(invoice.getId())
                 .invoiceNumber(invoice.getInvoiceNumber())
+                .status(invoice.getStatus())
                 .totalAmount(invoice.getTotalAmount().getAmount())
                 .paidAmount(invoice.getTotalAmount().subtract(invoice.getBalanceDue()).getAmount())
                 .balanceDue(invoice.getBalanceDue().getAmount())

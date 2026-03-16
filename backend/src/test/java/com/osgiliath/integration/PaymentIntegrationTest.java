@@ -6,7 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.osgiliath.BaseIntegrationTest;
-import com.osgiliath.application.payment.command.RecordPaymentCommand;
+import com.osgiliath.application.payment.dto.RecordPaymentRequest;
 import com.osgiliath.domain.invoice.Invoice;
 import com.osgiliath.domain.invoice.InvoiceStatus;
 import com.osgiliath.domain.payment.Payment;
@@ -39,9 +39,8 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
         Money originalBalance = invoice.getBalanceDue();
         Money paymentAmount = Money.of(50.0);
 
-        RecordPaymentCommand command =
-                new RecordPaymentCommand(
-                        invoice.getId(),
+        RecordPaymentRequest request =
+                new RecordPaymentRequest(
                         paymentAmount.getAmount(),
                         LocalDate.now(),
                         PaymentMethod.BANK_TRANSFER,
@@ -50,19 +49,19 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
         // When & Then
         MvcResult result =
                 mockMvc.perform(
-                                post("/api/payments")
+                                post("/api/invoices/" + invoice.getId() + "/payments")
                                         .contentType(MediaType.APPLICATION_JSON)
-                                        .content(objectMapper.writeValueAsString(command)))
+                                        .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isCreated())
-                        .andExpect(jsonPath("$.paymentId").exists())
+                        .andExpect(jsonPath("$.id").exists())
                         .andExpect(jsonPath("$.invoiceId").value(invoice.getId().toString()))
-                        .andExpect(jsonPath("$.paymentAmount").value(50.0))
-                        .andExpect(jsonPath("$.invoiceStatus").value("SENT"))
+                        .andExpect(jsonPath("$.amount").value(50.0))
+                        .andExpect(jsonPath("$.updatedInvoiceStatus").value("SENT"))
                         .andReturn();
 
         // Verify payment was saved
         String responseBody = result.getResponse().getContentAsString();
-        String paymentId = objectMapper.readTree(responseBody).get("paymentId").asText();
+        String paymentId = objectMapper.readTree(responseBody).get("id").asText();
 
         Payment savedPayment = paymentRepository.findById(UUID.fromString(paymentId)).orElseThrow();
 
@@ -85,9 +84,8 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
 
         Money totalAmount = invoice.getTotalAmount();
 
-        RecordPaymentCommand command =
-                new RecordPaymentCommand(
-                        invoice.getId(),
+        RecordPaymentRequest request =
+                new RecordPaymentRequest(
                         totalAmount.getAmount(),
                         LocalDate.now(),
                         PaymentMethod.BANK_TRANSFER,
@@ -95,12 +93,12 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
 
         // When & Then
         mockMvc.perform(
-                        post("/api/payments")
+                        post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(command)))
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.invoiceStatus").value("PAID"))
-                .andExpect(jsonPath("$.newBalanceDue").value(0.0));
+                .andExpect(jsonPath("$.updatedInvoiceStatus").value("PAID"))
+                .andExpect(jsonPath("$.updatedInvoiceBalance").value(0.0));
 
         // Verify invoice status
         Invoice paidInvoice = invoiceRepository.findById(invoice.getId()).orElseThrow();
@@ -118,41 +116,38 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
         Money totalAmount = invoice.getTotalAmount();
 
         // First payment: 40%
-        RecordPaymentCommand payment1 =
-                new RecordPaymentCommand(
-                        invoice.getId(),
+        RecordPaymentRequest payment1 =
+                new RecordPaymentRequest(
                         totalAmount.multiply(new BigDecimal("0.4")).getAmount(),
                         LocalDate.now(),
                         PaymentMethod.BANK_TRANSFER,
                         "REF-1");
 
         mockMvc.perform(
-                        post("/api/payments")
+                        post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(payment1)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.invoiceStatus").value("SENT"));
+                .andExpect(jsonPath("$.updatedInvoiceStatus").value("SENT"));
 
         // Second payment: 30%
-        RecordPaymentCommand payment2 =
-                new RecordPaymentCommand(
-                        invoice.getId(),
+        RecordPaymentRequest payment2 =
+                new RecordPaymentRequest(
                         totalAmount.multiply(new BigDecimal("0.3")).getAmount(),
                         LocalDate.now(),
                         PaymentMethod.CREDIT_CARD,
                         "REF-2");
 
         mockMvc.perform(
-                        post("/api/payments")
+                        post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(payment2)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.invoiceStatus").value("SENT"));
+                .andExpect(jsonPath("$.updatedInvoiceStatus").value("SENT"));
 
         // Third payment: 30% (total now 100%)
-        RecordPaymentCommand payment3 =
-                new RecordPaymentCommand(
-                        invoice.getId(),
+        RecordPaymentRequest payment3 =
+                new RecordPaymentRequest(
                         totalAmount.multiply(new BigDecimal("0.3")).getAmount(),
                         LocalDate.now(),
                         PaymentMethod.CASH,
@@ -160,11 +155,11 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
 
         // When & Then
         mockMvc.perform(
-                        post("/api/payments")
+                        post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(payment3)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.invoiceStatus").value("PAID"));
+                .andExpect(jsonPath("$.updatedInvoiceStatus").value("PAID"));
 
         // Verify final state
         Invoice paidInvoice = invoiceRepository.findById(invoice.getId()).orElseThrow();
@@ -180,9 +175,8 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
         // Given
         Invoice invoice = testDataBuilder.invoice().buildWithLineItemsAndSave(); // DRAFT status
 
-        RecordPaymentCommand command =
-                new RecordPaymentCommand(
-                        invoice.getId(),
+        RecordPaymentRequest request =
+                new RecordPaymentRequest(
                         new BigDecimal("50.00"),
                         LocalDate.now(),
                         PaymentMethod.BANK_TRANSFER,
@@ -190,9 +184,9 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
 
         // When & Then
         mockMvc.perform(
-                        post("/api/payments")
+                        post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(command)))
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(
                         jsonPath("$.message")
@@ -209,9 +203,8 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
 
         Money excessiveAmount = invoice.getBalanceDue().add(Money.of(1.0));
 
-        RecordPaymentCommand command =
-                new RecordPaymentCommand(
-                        invoice.getId(),
+        RecordPaymentRequest request =
+                new RecordPaymentRequest(
                         excessiveAmount.getAmount(),
                         LocalDate.now(),
                         PaymentMethod.BANK_TRANSFER,
@@ -219,9 +212,9 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
 
         // When & Then
         mockMvc.perform(
-                        post("/api/payments")
+                        post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(command)))
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(
                         jsonPath("$.message")
@@ -236,19 +229,15 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
         // Given
         Invoice invoice = testDataBuilder.invoice().buildSentAndSave();
 
-        RecordPaymentCommand command =
-                new RecordPaymentCommand(
-                        invoice.getId(),
-                        BigDecimal.ZERO,
-                        LocalDate.now(),
-                        PaymentMethod.BANK_TRANSFER,
-                        "REF-12345");
+        RecordPaymentRequest request =
+                new RecordPaymentRequest(
+                        BigDecimal.ZERO, LocalDate.now(), PaymentMethod.BANK_TRANSFER, "REF-12345");
 
         // When & Then
         mockMvc.perform(
-                        post("/api/payments")
+                        post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(command)))
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(
                         jsonPath("$.message")
@@ -263,9 +252,8 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
         // Given
         Invoice invoice = testDataBuilder.invoice().buildSentAndSave();
 
-        RecordPaymentCommand command =
-                new RecordPaymentCommand(
-                        invoice.getId(),
+        RecordPaymentRequest request =
+                new RecordPaymentRequest(
                         new BigDecimal("-50.00"),
                         LocalDate.now(),
                         PaymentMethod.BANK_TRANSFER,
@@ -273,9 +261,9 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
 
         // When & Then
         mockMvc.perform(
-                        post("/api/payments")
+                        post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(command)))
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(
                         jsonPath("$.message")
@@ -292,9 +280,8 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
 
         LocalDate futureDate = LocalDate.now().plusDays(1);
 
-        RecordPaymentCommand command =
-                new RecordPaymentCommand(
-                        invoice.getId(),
+        RecordPaymentRequest request =
+                new RecordPaymentRequest(
                         new BigDecimal("50.00"),
                         futureDate,
                         PaymentMethod.BANK_TRANSFER,
@@ -302,9 +289,9 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
 
         // When & Then
         mockMvc.perform(
-                        post("/api/payments")
+                        post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(command)))
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(
                         jsonPath("$.message")
@@ -391,9 +378,8 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
         };
 
         for (PaymentMethod method : methods) {
-            RecordPaymentCommand command =
-                    new RecordPaymentCommand(
-                            invoice.getId(),
+            RecordPaymentRequest request =
+                    new RecordPaymentRequest(
                             quarterAmount.getAmount(),
                             LocalDate.now(),
                             method,
@@ -401,11 +387,11 @@ class PaymentIntegrationTest extends BaseIntegrationTest {
 
             // When & Then
             mockMvc.perform(
-                            post("/api/payments")
+                            post("/api/invoices/" + invoice.getId() + "/payments")
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(command)))
+                                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.paymentId").exists());
+                    .andExpect(jsonPath("$.id").exists());
         }
 
         // Verify all payments were recorded

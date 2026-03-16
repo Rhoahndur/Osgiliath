@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.osgiliath.BaseIntegrationTest;
 import com.osgiliath.application.invoice.AddLineItemCommand;
 import com.osgiliath.application.invoice.CreateInvoiceCommand;
-import com.osgiliath.application.payment.command.RecordPaymentCommand;
+import com.osgiliath.application.payment.dto.RecordPaymentRequest;
 import com.osgiliath.domain.customer.Customer;
 import com.osgiliath.domain.invoice.Invoice;
 import com.osgiliath.domain.invoice.InvoiceStatus;
@@ -109,21 +109,20 @@ class InvoiceLifecycleIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.status").value("SENT"));
 
         // ===== STEP 6: Apply Partial Payment =====
-        RecordPaymentCommand payment1 =
-                new RecordPaymentCommand(
-                        invoiceId,
+        RecordPaymentRequest payment1 =
+                new RecordPaymentRequest(
                         new BigDecimal("3000.00"),
                         LocalDate.now(),
                         PaymentMethod.BANK_TRANSFER,
                         "WIRE-001");
 
         mockMvc.perform(
-                        post("/api/payments")
+                        post("/api/invoices/" + invoiceId + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(payment1)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.invoiceStatus").value("SENT"))
-                .andExpect(jsonPath("$.newBalanceDue").value(3050.00));
+                .andExpect(jsonPath("$.updatedInvoiceStatus").value("SENT"))
+                .andExpect(jsonPath("$.updatedInvoiceBalance").value(3050.00));
 
         // ===== STEP 7: Verify Balance Updated =====
         mockMvc.perform(get("/api/invoices/" + invoiceId + "/balance"))
@@ -137,21 +136,20 @@ class InvoiceLifecycleIntegrationTest extends BaseIntegrationTest {
         assertThat(afterPartialPayment.getBalanceDue().getAmount()).isEqualByComparingTo("3050.00");
 
         // ===== STEP 8: Apply Final Payment =====
-        RecordPaymentCommand payment2 =
-                new RecordPaymentCommand(
-                        invoiceId,
+        RecordPaymentRequest payment2 =
+                new RecordPaymentRequest(
                         new BigDecimal("3050.00"),
                         LocalDate.now(),
                         PaymentMethod.CREDIT_CARD,
                         "CC-002");
 
         mockMvc.perform(
-                        post("/api/payments")
+                        post("/api/invoices/" + invoiceId + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(payment2)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.invoiceStatus").value("PAID"))
-                .andExpect(jsonPath("$.newBalanceDue").value(0.0));
+                .andExpect(jsonPath("$.updatedInvoiceStatus").value("PAID"))
+                .andExpect(jsonPath("$.updatedInvoiceBalance").value(0.0));
 
         // ===== STEP 9: Verify Status → PAID =====
         Invoice paidInvoice = invoiceRepository.findById(invoiceId).orElseThrow();
@@ -206,7 +204,7 @@ class InvoiceLifecycleIntegrationTest extends BaseIntegrationTest {
 
         // Attempt to send invoice without line items
         mockMvc.perform(post("/api/invoices/" + invoiceId + "/send"))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableEntity())
                 .andExpect(
                         jsonPath("$.message")
                                 .value(
@@ -254,15 +252,15 @@ class InvoiceLifecycleIntegrationTest extends BaseIntegrationTest {
                                 .content(cancelRequest))
                 .andExpect(status().isOk());
 
-        // Verify status = CANCELLED and balance = 0
+        // Verify status = CANCELLED
+        // SENT invoices retain balanceDue as record of outstanding amount at cancellation
         Invoice cancelledInvoice = invoiceRepository.findById(invoice.getId()).orElseThrow();
         assertThat(cancelledInvoice.getStatus()).isEqualTo(InvoiceStatus.CANCELLED);
-        assertThat(cancelledInvoice.getBalanceDue().isZero()).isTrue();
+        assertThat(cancelledInvoice.getBalanceDue()).isEqualTo(balanceBeforeCancel);
 
         mockMvc.perform(get("/api/invoices/" + invoice.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("CANCELLED"))
-                .andExpect(jsonPath("$.balanceDue").value(0.0));
+                .andExpect(jsonPath("$.status").value("CANCELLED"));
     }
 
     @Test

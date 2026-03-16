@@ -6,7 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.osgiliath.BaseIntegrationTest;
-import com.osgiliath.application.payment.command.RecordPaymentCommand;
+import com.osgiliath.application.payment.dto.RecordPaymentRequest;
 import com.osgiliath.domain.customer.Customer;
 import com.osgiliath.domain.invoice.Invoice;
 import com.osgiliath.domain.invoice.InvoiceStatus;
@@ -44,7 +44,7 @@ class BusinessRulesValidationTest extends BaseIntegrationTest {
 
         // Attempt to delete customer
         mockMvc.perform(delete("/api/customers/" + customer.getId()))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isConflict())
                 .andExpect(
                         jsonPath("$.message")
                                 .value(
@@ -90,18 +90,17 @@ class BusinessRulesValidationTest extends BaseIntegrationTest {
         assertThat(invoice.getStatus()).isEqualTo(InvoiceStatus.DRAFT);
 
         // Attempt payment to draft invoice
-        RecordPaymentCommand paymentCommand =
-                new RecordPaymentCommand(
-                        invoice.getId(),
+        RecordPaymentRequest paymentRequest =
+                new RecordPaymentRequest(
                         new BigDecimal("100.00"),
                         LocalDate.now(),
                         PaymentMethod.CASH,
                         "INVALID-001");
 
         mockMvc.perform(
-                        post("/api/payments")
+                        post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(paymentCommand)))
+                                .content(objectMapper.writeValueAsString(paymentRequest)))
                 .andExpect(status().isBadRequest())
                 .andExpect(
                         jsonPath("$.message")
@@ -144,18 +143,17 @@ class BusinessRulesValidationTest extends BaseIntegrationTest {
         assertThat(cancelledInvoice.getStatus()).isEqualTo(InvoiceStatus.CANCELLED);
 
         // Attempt payment to cancelled invoice
-        RecordPaymentCommand paymentCommand =
-                new RecordPaymentCommand(
-                        invoice.getId(),
+        RecordPaymentRequest paymentRequest =
+                new RecordPaymentRequest(
                         new BigDecimal("100.00"),
                         LocalDate.now(),
                         PaymentMethod.CASH,
                         "INVALID-002");
 
         mockMvc.perform(
-                        post("/api/payments")
+                        post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(paymentCommand)))
+                                .content(objectMapper.writeValueAsString(paymentRequest)))
                 .andExpect(status().isBadRequest())
                 .andExpect(
                         jsonPath("$.message")
@@ -181,35 +179,30 @@ class BusinessRulesValidationTest extends BaseIntegrationTest {
         Invoice invoice = testDataBuilder.invoice().customer(customer).buildSentAndSave();
 
         // Make full payment
-        RecordPaymentCommand fullPayment =
-                new RecordPaymentCommand(
-                        invoice.getId(),
+        RecordPaymentRequest fullPayment =
+                new RecordPaymentRequest(
                         invoice.getTotalAmount().getAmount(),
                         LocalDate.now(),
                         PaymentMethod.BANK_TRANSFER,
                         "FULL-PAYMENT-001");
 
         mockMvc.perform(
-                        post("/api/payments")
+                        post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(fullPayment)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.invoiceStatus").value("PAID"));
+                .andExpect(jsonPath("$.updatedInvoiceStatus").value("PAID"));
 
         Invoice paidInvoice = invoiceRepository.findById(invoice.getId()).orElseThrow();
         assertThat(paidInvoice.getStatus()).isEqualTo(InvoiceStatus.PAID);
 
         // Attempt another payment to paid invoice
-        RecordPaymentCommand extraPayment =
-                new RecordPaymentCommand(
-                        invoice.getId(),
-                        new BigDecimal("50.00"),
-                        LocalDate.now(),
-                        PaymentMethod.CASH,
-                        "EXTRA-001");
+        RecordPaymentRequest extraPayment =
+                new RecordPaymentRequest(
+                        new BigDecimal("50.00"), LocalDate.now(), PaymentMethod.CASH, "EXTRA-001");
 
         mockMvc.perform(
-                        post("/api/payments")
+                        post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(extraPayment)))
                 .andExpect(status().isBadRequest())
@@ -237,18 +230,14 @@ class BusinessRulesValidationTest extends BaseIntegrationTest {
         BigDecimal overpayment = totalAmount.add(new BigDecimal("1000.00"));
 
         // Attempt payment exceeding balance
-        RecordPaymentCommand paymentCommand =
-                new RecordPaymentCommand(
-                        invoice.getId(),
-                        overpayment,
-                        LocalDate.now(),
-                        PaymentMethod.CREDIT_CARD,
-                        "OVERPAY-001");
+        RecordPaymentRequest paymentRequest =
+                new RecordPaymentRequest(
+                        overpayment, LocalDate.now(), PaymentMethod.CREDIT_CARD, "OVERPAY-001");
 
         mockMvc.perform(
-                        post("/api/payments")
+                        post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(paymentCommand)))
+                                .content(objectMapper.writeValueAsString(paymentRequest)))
                 .andExpect(status().isBadRequest())
                 .andExpect(
                         jsonPath("$.message")
@@ -292,20 +281,19 @@ class BusinessRulesValidationTest extends BaseIntegrationTest {
         assertThat(overdueInvoice.getStatus()).isEqualTo(InvoiceStatus.OVERDUE);
 
         // Apply payment to overdue invoice
-        RecordPaymentCommand paymentCommand =
-                new RecordPaymentCommand(
-                        invoice.getId(),
+        RecordPaymentRequest paymentRequest =
+                new RecordPaymentRequest(
                         new BigDecimal("100.00"),
                         LocalDate.now(),
                         PaymentMethod.BANK_TRANSFER,
                         "OVERDUE-PAYMENT-001");
 
         mockMvc.perform(
-                        post("/api/payments")
+                        post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(paymentCommand)))
+                                .content(objectMapper.writeValueAsString(paymentRequest)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.invoiceStatus").value("OVERDUE"));
+                .andExpect(jsonPath("$.updatedInvoiceStatus").value("OVERDUE"));
 
         // Verify payment was created
         assertThat(paymentRepository.findByInvoiceId(invoice.getId())).hasSize(1);
@@ -369,31 +357,23 @@ class BusinessRulesValidationTest extends BaseIntegrationTest {
         Invoice invoice = testDataBuilder.invoice().customer(customer).buildSentAndSave();
 
         // Attempt zero payment
-        RecordPaymentCommand zeroPayment =
-                new RecordPaymentCommand(
-                        invoice.getId(),
-                        BigDecimal.ZERO,
-                        LocalDate.now(),
-                        PaymentMethod.CASH,
-                        "ZERO-001");
+        RecordPaymentRequest zeroPayment =
+                new RecordPaymentRequest(
+                        BigDecimal.ZERO, LocalDate.now(), PaymentMethod.CASH, "ZERO-001");
 
         mockMvc.perform(
-                        post("/api/payments")
+                        post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(zeroPayment)))
                 .andExpect(status().isBadRequest());
 
         // Attempt negative payment
-        RecordPaymentCommand negativePayment =
-                new RecordPaymentCommand(
-                        invoice.getId(),
-                        new BigDecimal("-50.00"),
-                        LocalDate.now(),
-                        PaymentMethod.CASH,
-                        "NEG-001");
+        RecordPaymentRequest negativePayment =
+                new RecordPaymentRequest(
+                        new BigDecimal("-50.00"), LocalDate.now(), PaymentMethod.CASH, "NEG-001");
 
         mockMvc.perform(
-                        post("/api/payments")
+                        post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(negativePayment)))
                 .andExpect(status().isBadRequest());

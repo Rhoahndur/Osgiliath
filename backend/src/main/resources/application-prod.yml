@@ -4,6 +4,9 @@ cors:
     origins: ${CORS_ALLOWED_ORIGINS:https://osgiliath.vercel.app,https://osgiliath-*.vercel.app,http://localhost:3000}
 
 spring:
+  threads:
+    virtual:
+      enabled: true  # Virtual threads for minimal memory per request
   jpa:
     show-sql: false
     hibernate:
@@ -24,6 +27,12 @@ spring:
       connection-timeout: 30000
   main:
     lazy-initialization: true  # Lazy load beans to reduce startup memory
+
+server:
+  tomcat:
+    threads:
+      max: 15  # Free tier doesn't need 200 threads
+      min-spare: 2
 
 logging:
   level:

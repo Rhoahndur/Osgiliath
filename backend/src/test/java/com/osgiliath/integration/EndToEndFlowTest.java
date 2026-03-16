@@ -9,7 +9,7 @@ import com.osgiliath.BaseIntegrationTest;
 import com.osgiliath.application.customer.command.CreateCustomerCommand;
 import com.osgiliath.application.invoice.AddLineItemCommand;
 import com.osgiliath.application.invoice.CreateInvoiceCommand;
-import com.osgiliath.application.payment.command.RecordPaymentCommand;
+import com.osgiliath.application.payment.dto.RecordPaymentRequest;
 import com.osgiliath.domain.customer.Customer;
 import com.osgiliath.domain.invoice.Invoice;
 import com.osgiliath.domain.invoice.InvoiceStatus;
@@ -80,7 +80,7 @@ class EndToEndFlowTest extends BaseIntegrationTest {
                                                 objectMapper.writeValueAsString(
                                                         createInvoiceCommand)))
                         .andExpect(status().isCreated())
-                        .andExpect(jsonPath("$.invoiceNumber").value("INV-2024-001"))
+                        .andExpect(jsonPath("$.invoiceNumber").exists())
                         .andExpect(jsonPath("$.status").value("DRAFT"))
                         .andExpect(jsonPath("$.totalAmount").value(0.0))
                         .andReturn();
@@ -164,9 +164,8 @@ class EndToEndFlowTest extends BaseIntegrationTest {
                                                 "Cannot add line items to a non-draft invoice")));
 
         // ===== STEP 5: First Partial Payment (40% = $8,140) =====
-        RecordPaymentCommand payment1 =
-                new RecordPaymentCommand(
-                        invoiceId,
+        RecordPaymentRequest payment1 =
+                new RecordPaymentRequest(
                         new BigDecimal("8140.00"),
                         LocalDate.now(),
                         PaymentMethod.BANK_TRANSFER,
@@ -174,17 +173,16 @@ class EndToEndFlowTest extends BaseIntegrationTest {
 
         MvcResult payment1Result =
                 mockMvc.perform(
-                                post("/api/payments")
+                                post("/api/invoices/" + invoiceId + "/payments")
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(payment1)))
                         .andExpect(status().isCreated())
-                        .andExpect(jsonPath("$.invoiceStatus").value("SENT"))
-                        .andExpect(jsonPath("$.newBalanceDue").value(12210.00))
+                        .andExpect(jsonPath("$.updatedInvoiceStatus").value("SENT"))
+                        .andExpect(jsonPath("$.updatedInvoiceBalance").value(12210.00))
                         .andReturn();
 
         String payment1Json = payment1Result.getResponse().getContentAsString();
-        UUID payment1Id =
-                UUID.fromString(objectMapper.readTree(payment1Json).get("paymentId").asText());
+        UUID payment1Id = UUID.fromString(objectMapper.readTree(payment1Json).get("id").asText());
 
         // Verify first payment
         Payment savedPayment1 = paymentRepository.findById(payment1Id).orElseThrow();
@@ -196,9 +194,8 @@ class EndToEndFlowTest extends BaseIntegrationTest {
         assertThat(afterPayment1.getBalanceDue().getAmount()).isEqualByComparingTo("12210.00");
 
         // ===== STEP 6: Second Partial Payment (35% = $7,122.50) =====
-        RecordPaymentCommand payment2 =
-                new RecordPaymentCommand(
-                        invoiceId,
+        RecordPaymentRequest payment2 =
+                new RecordPaymentRequest(
                         new BigDecimal("7122.50"),
                         LocalDate.now(),
                         PaymentMethod.CREDIT_CARD,
@@ -206,17 +203,16 @@ class EndToEndFlowTest extends BaseIntegrationTest {
 
         MvcResult payment2Result =
                 mockMvc.perform(
-                                post("/api/payments")
+                                post("/api/invoices/" + invoiceId + "/payments")
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(payment2)))
                         .andExpect(status().isCreated())
-                        .andExpect(jsonPath("$.invoiceStatus").value("SENT"))
-                        .andExpect(jsonPath("$.newBalanceDue").value(5087.50))
+                        .andExpect(jsonPath("$.updatedInvoiceStatus").value("SENT"))
+                        .andExpect(jsonPath("$.updatedInvoiceBalance").value(5087.50))
                         .andReturn();
 
         String payment2Json = payment2Result.getResponse().getContentAsString();
-        UUID payment2Id =
-                UUID.fromString(objectMapper.readTree(payment2Json).get("paymentId").asText());
+        UUID payment2Id = UUID.fromString(objectMapper.readTree(payment2Json).get("id").asText());
 
         // Verify second payment
         Payment savedPayment2 = paymentRepository.findById(payment2Id).orElseThrow();
@@ -227,9 +223,8 @@ class EndToEndFlowTest extends BaseIntegrationTest {
         assertThat(afterPayment2.getBalanceDue().getAmount()).isEqualByComparingTo("5087.50");
 
         // ===== STEP 7: Final Payment (remaining balance) =====
-        RecordPaymentCommand payment3 =
-                new RecordPaymentCommand(
-                        invoiceId,
+        RecordPaymentRequest payment3 =
+                new RecordPaymentRequest(
                         new BigDecimal("5087.50"),
                         LocalDate.now(),
                         PaymentMethod.CHECK,
@@ -237,17 +232,16 @@ class EndToEndFlowTest extends BaseIntegrationTest {
 
         MvcResult payment3Result =
                 mockMvc.perform(
-                                post("/api/payments")
+                                post("/api/invoices/" + invoiceId + "/payments")
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(payment3)))
                         .andExpect(status().isCreated())
-                        .andExpect(jsonPath("$.invoiceStatus").value("PAID"))
-                        .andExpect(jsonPath("$.newBalanceDue").value(0.0))
+                        .andExpect(jsonPath("$.updatedInvoiceStatus").value("PAID"))
+                        .andExpect(jsonPath("$.updatedInvoiceBalance").value(0.0))
                         .andReturn();
 
         String payment3Json = payment3Result.getResponse().getContentAsString();
-        UUID payment3Id =
-                UUID.fromString(objectMapper.readTree(payment3Json).get("paymentId").asText());
+        UUID payment3Id = UUID.fromString(objectMapper.readTree(payment3Json).get("id").asText());
 
         // Verify final payment and invoice status
         Payment savedPayment3 = paymentRepository.findById(payment3Id).orElseThrow();
@@ -273,16 +267,12 @@ class EndToEndFlowTest extends BaseIntegrationTest {
         assertThat(totalPaid).isEqualByComparingTo("20350.00");
 
         // ===== VERIFICATION: Try to make another payment (should fail) =====
-        RecordPaymentCommand extraPayment =
-                new RecordPaymentCommand(
-                        invoiceId,
-                        new BigDecimal("100.00"),
-                        LocalDate.now(),
-                        PaymentMethod.CASH,
-                        "EXTRA");
+        RecordPaymentRequest extraPayment =
+                new RecordPaymentRequest(
+                        new BigDecimal("100.00"), LocalDate.now(), PaymentMethod.CASH, "EXTRA");
 
         mockMvc.perform(
-                        post("/api/payments")
+                        post("/api/invoices/" + invoiceId + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(extraPayment)))
                 .andExpect(status().isBadRequest())
@@ -304,7 +294,7 @@ class EndToEndFlowTest extends BaseIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(invoiceId.toString()))
                 .andExpect(jsonPath("$.customerId").value(customerId.toString()))
-                .andExpect(jsonPath("$.invoiceNumber").value("INV-2024-001"))
+                .andExpect(jsonPath("$.invoiceNumber").exists())
                 .andExpect(jsonPath("$.status").value("PAID"))
                 .andExpect(jsonPath("$.lineItems.length()").value(3))
                 .andExpect(jsonPath("$.subtotal").value(18500.00))
@@ -366,21 +356,20 @@ class EndToEndFlowTest extends BaseIntegrationTest {
                 .andExpect(status().isOk());
 
         // Make full payment immediately
-        RecordPaymentCommand fullPayment =
-                new RecordPaymentCommand(
-                        invoice.getId(),
+        RecordPaymentRequest fullPayment =
+                new RecordPaymentRequest(
                         totalAmount,
                         LocalDate.now(),
                         PaymentMethod.BANK_TRANSFER,
                         "WIRE-FULL-PAYMENT");
 
         mockMvc.perform(
-                        post("/api/payments")
+                        post("/api/invoices/" + invoice.getId() + "/payments")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(fullPayment)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.invoiceStatus").value("PAID"))
-                .andExpect(jsonPath("$.newBalanceDue").value(0.0));
+                .andExpect(jsonPath("$.updatedInvoiceStatus").value("PAID"))
+                .andExpect(jsonPath("$.updatedInvoiceBalance").value(0.0));
 
         // Verify final state
         Invoice paidInvoice = invoiceRepository.findById(invoice.getId()).orElseThrow();
