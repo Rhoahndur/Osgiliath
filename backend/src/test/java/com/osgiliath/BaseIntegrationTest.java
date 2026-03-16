@@ -15,32 +15,42 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * Base class for integration tests using TestContainers with PostgreSQL Provides common setup and
- * utilities for all integration tests
+ * utilities for all integration tests.
+ *
+ * <p>When SPRING_DATASOURCE_URL is set (e.g. in CI), uses the externally-provided database.
+ * Otherwise starts a Testcontainers PostgreSQL container for local development.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@Testcontainers
 @Transactional
 @Import(TestSecurityConfig.class)
 public abstract class BaseIntegrationTest {
 
-    @Container
-    protected static PostgreSQLContainer<?> postgresContainer =
-            new PostgreSQLContainer<>("postgres:15-alpine")
-                    .withDatabaseName("osgiliath_test")
-                    .withUsername("test")
-                    .withPassword("test");
+    private static final PostgreSQLContainer<?> postgresContainer;
+
+    static {
+        if (System.getenv("SPRING_DATASOURCE_URL") == null) {
+            postgresContainer =
+                    new PostgreSQLContainer<>("postgres:15-alpine")
+                            .withDatabaseName("osgiliath_test")
+                            .withUsername("test")
+                            .withPassword("test");
+            postgresContainer.start();
+        } else {
+            postgresContainer = null;
+        }
+    }
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgresContainer::getJdbcUrl);
-        registry.add("spring.datasource.username", postgresContainer::getUsername);
-        registry.add("spring.datasource.password", postgresContainer::getPassword);
+        if (postgresContainer != null) {
+            registry.add("spring.datasource.url", postgresContainer::getJdbcUrl);
+            registry.add("spring.datasource.username", postgresContainer::getUsername);
+            registry.add("spring.datasource.password", postgresContainer::getPassword);
+        }
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
         registry.add("spring.jpa.show-sql", () -> "false");
     }

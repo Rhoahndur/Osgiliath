@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import com.osgiliath.domain.customer.CustomerRepository;
 import com.osgiliath.domain.invoice.Invoice;
 import com.osgiliath.domain.invoice.InvoiceRepository;
 import com.osgiliath.domain.invoice.InvoiceStatus;
@@ -17,7 +18,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -27,14 +27,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class SendInvoiceHandlerTest {
 
     @Mock private InvoiceRepository invoiceRepository;
+    @Mock private ExportInvoiceToPdfQueryHandler pdfExporter;
+    @Mock private CustomerRepository customerRepository;
 
-    @InjectMocks private SendInvoiceHandler handler;
+    private SendInvoiceHandler handler;
 
     private UUID invoiceId;
     private Invoice invoice;
 
     @BeforeEach
     void setUp() {
+        handler =
+                new SendInvoiceHandler(
+                        invoiceRepository, Optional.empty(), pdfExporter, customerRepository);
         invoiceId = UUID.randomUUID();
         UUID customerId = UUID.randomUUID();
         invoice =
