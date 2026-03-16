@@ -350,7 +350,7 @@ class InvoiceTest {
 
         assertThatThrownBy(() -> invoice.applyPayment(Money.of(50.0)))
                 .isInstanceOf(DomainException.class)
-                .hasMessageContaining("can only be applied to SENT or OVERDUE invoices");
+                .hasMessageContaining("Can only apply payments to SENT or OVERDUE invoices");
     }
 
     @Test
@@ -388,6 +388,6 @@ class InvoiceTest {
 
         assertThatThrownBy(() -> invoice.applyPayment(excessivePayment))
                 .isInstanceOf(DomainException.class)
-                .hasMessageContaining("exceeds invoice balance due");
+                .hasMessageContaining("Payment amount cannot exceed balance due");
     }
 }

@@ -1,0 +1,17 @@
+# Backend: compile and run tests before pushing
+if git diff --name-only HEAD @{upstream} 2>/dev/null | grep -q 'backend/'; then
+  echo "Running backend tests..."
+  (cd backend && ./mvnw test -q) || {
+    echo "Backend tests failed. Push aborted."
+    exit 1
+  }
+fi
+
+# Frontend: type-check and run tests before pushing
+if git diff --name-only HEAD @{upstream} 2>/dev/null | grep -q 'frontend/'; then
+  echo "Running frontend checks..."
+  (cd frontend && npm run type-check && npm run test:ci) || {
+    echo "Frontend checks failed. Push aborted."
+    exit 1
+  }
+fi

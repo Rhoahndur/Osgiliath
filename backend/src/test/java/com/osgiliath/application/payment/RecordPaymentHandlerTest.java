@@ -122,7 +122,8 @@ class RecordPaymentHandlerTest {
         // When & Then
         assertThatThrownBy(() -> handler.handle(command))
                 .isInstanceOf(DomainException.class)
-                .hasMessageContaining("Cannot apply payment to invoice with status: DRAFT");
+                .hasMessageContaining(
+                        "Payments can only be applied to SENT or OVERDUE invoices. Current status: DRAFT");
 
         verify(paymentRepository, never()).save(any(Payment.class));
     }
