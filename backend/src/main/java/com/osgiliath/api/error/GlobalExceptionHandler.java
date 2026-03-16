@@ -171,7 +171,7 @@ public class GlobalExceptionHandler {
 
     /** Determine appropriate HTTP status for domain exceptions */
     private HttpStatus determineStatusForDomainException(DomainException ex) {
-        String message = ex.getMessage().toLowerCase();
+        String message = ex.getMessage() != null ? ex.getMessage().toLowerCase() : "";
 
         if (message.contains("not found")) {
             return HttpStatus.NOT_FOUND;
