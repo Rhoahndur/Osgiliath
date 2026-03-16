@@ -12,6 +12,7 @@ Complete REST API reference for the Osgiliath application.
 - [Customer Endpoints](#customer-endpoints)
 - [Invoice Endpoints](#invoice-endpoints)
 - [Payment Endpoints](#payment-endpoints)
+- [Analytics Endpoints](#analytics-endpoints)
 - [Data Models](#data-models)
 
 ## Overview
@@ -112,7 +113,7 @@ GET /api/invoices?status=SENT&customerId=123&fromDate=2024-01-01&toDate=2024-12-
 ```
 
 Parameters:
-- `status`: Filter by invoice status (DRAFT, SENT, PAID)
+- `status`: Filter by invoice status (DRAFT, SENT, PAID, OVERDUE, CANCELLED)
 - `customerId`: Filter by customer UUID
 - `fromDate`: Filter by issue date from (ISO date format)
 - `toDate`: Filter by issue date to (ISO date format)
@@ -165,6 +166,7 @@ All errors return a consistent JSON structure:
 | 403 | Forbidden | Insufficient permissions |
 | 404 | Not Found | Resource not found |
 | 409 | Conflict | Duplicate resource (e.g., email already exists) |
+| 422 | Unprocessable Entity | Business rule violation (e.g., invoice not in correct status, payment exceeds balance) |
 | 500 | Internal Server Error | Unexpected server error |
 
 ### Common Error Scenarios
@@ -224,20 +226,19 @@ POST /auth/register
 }
 ```
 
-**Response** (200 OK):
+**Response** (201 Created):
 ```json
 {
   "id": "123e4567-e89b-12d3-a456-426614174000",
   "username": "johndoe",
-  "email": "john@example.com",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "email": "john@example.com"
 }
 ```
 
 **Validation Rules**:
 - Username: 3-50 characters, alphanumeric
 - Email: Valid email format, must be unique
-- Password: Minimum 8 characters
+- Password: Minimum 6 characters
 
 **Example**:
 ```bash
@@ -269,10 +270,9 @@ POST /auth/login
 **Response** (200 OK):
 ```json
 {
-  "id": "123e4567-e89b-12d3-a456-426614174000",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "username": "johndoe",
-  "email": "john@example.com",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "tokenType": "Bearer"
 }
 ```
 
@@ -284,6 +284,29 @@ curl -X POST http://localhost:8080/api/auth/login \
     "username": "johndoe",
     "password": "SecurePassword123!"
   }'
+```
+
+### Get Current User
+
+Retrieve the currently authenticated user's information.
+
+```http
+GET /auth/me
+```
+
+**Response** (200 OK):
+```json
+{
+  "id": "123e4567-e89b-12d3-a456-426614174000",
+  "username": "johndoe",
+  "email": "john@example.com"
+}
+```
+
+**Example**:
+```bash
+curl -X GET http://localhost:8080/api/auth/me \
+  -H "Authorization: Bearer <token>"
 ```
 
 ## Customer Endpoints
@@ -315,7 +338,8 @@ POST /customers
   "phone": "+1-555-0123",
   "address": "123 Main St, City, State 12345",
   "createdAt": "2024-11-07T10:30:00",
-  "updatedAt": "2024-11-07T10:30:00"
+  "updatedAt": "2024-11-07T10:30:00",
+  "version": 0
 }
 ```
 
@@ -358,7 +382,8 @@ GET /customers/{id}
   "phone": "+1-555-0123",
   "address": "123 Main St, City, State 12345",
   "createdAt": "2024-11-07T10:30:00",
-  "updatedAt": "2024-11-07T10:30:00"
+  "updatedAt": "2024-11-07T10:30:00",
+  "version": 0
 }
 ```
 
@@ -442,7 +467,8 @@ PUT /customers/{id}
   "phone": "+1-555-0124",
   "address": "456 New St, City, State 12345",
   "createdAt": "2024-11-07T10:30:00",
-  "updatedAt": "2024-11-07T11:45:00"
+  "updatedAt": "2024-11-07T11:45:00",
+  "version": 1
 }
 ```
 
@@ -492,7 +518,6 @@ POST /invoices
 ```json
 {
   "customerId": "123e4567-e89b-12d3-a456-426614174000",
-  "invoiceNumber": "INV-2024-001",
   "issueDate": "2024-11-07",
   "dueDate": "2024-12-07",
   "lineItems": [
@@ -515,7 +540,8 @@ POST /invoices
 {
   "id": "789e4567-e89b-12d3-a456-426614174000",
   "customerId": "123e4567-e89b-12d3-a456-426614174000",
-  "invoiceNumber": "INV-2024-001",
+  "customerName": "Acme Corporation",
+  "invoiceNumber": "INV-20241107-00001",
   "issueDate": "2024-11-07",
   "dueDate": "2024-12-07",
   "status": "DRAFT",
@@ -540,13 +566,14 @@ POST /invoices
   "totalAmount": 6050.00,
   "balanceDue": 0.00,
   "createdAt": "2024-11-07T10:30:00",
-  "updatedAt": "2024-11-07T10:30:00"
+  "updatedAt": "2024-11-07T10:30:00",
+  "version": 0
 }
 ```
 
 **Validation Rules**:
 - `customerId`: Required, must exist
-- `invoiceNumber`: Required, must be unique
+- `invoiceNumber`: Auto-generated (format: INV-YYYYMMDD-NNNNN)
 - `issueDate`: Required, valid date
 - `dueDate`: Required, must be >= issueDate
 - `lineItems`: Optional, but invoice cannot be sent without line items
@@ -565,7 +592,6 @@ curl -X POST http://localhost:8080/api/invoices \
   -H "Content-Type: application/json" \
   -d '{
     "customerId": "123e4567-e89b-12d3-a456-426614174000",
-    "invoiceNumber": "INV-2024-001",
     "issueDate": "2024-11-07",
     "dueDate": "2024-12-07",
     "lineItems": [
@@ -594,7 +620,8 @@ GET /invoices/{id}
 {
   "id": "789e4567-e89b-12d3-a456-426614174000",
   "customerId": "123e4567-e89b-12d3-a456-426614174000",
-  "invoiceNumber": "INV-2024-001",
+  "customerName": "Acme Corporation",
+  "invoiceNumber": "INV-20241107-00001",
   "issueDate": "2024-11-07",
   "dueDate": "2024-12-07",
   "status": "SENT",
@@ -623,12 +650,14 @@ GET /invoices?status=SENT&customerId={uuid}&fromDate=2024-01-01&toDate=2024-12-3
 ```
 
 **Query Parameters**:
-- `status`: Filter by status (DRAFT, SENT, PAID)
+- `status`: Filter by status (DRAFT, SENT, PAID, OVERDUE, CANCELLED)
 - `customerId`: Filter by customer UUID
 - `fromDate`: Filter by issue date from (ISO date)
 - `toDate`: Filter by issue date to (ISO date)
 - `page`: Page number, default: 0
 - `size`: Page size, default: 20
+- `sortBy`: Sort field, default: issueDate
+- `sortDirection`: ASC or DESC, default: DESC
 
 **Response** (200 OK):
 ```json
@@ -680,7 +709,8 @@ PUT /invoices/{id}
 {
   "id": "789e4567-e89b-12d3-a456-426614174000",
   "customerId": "123e4567-e89b-12d3-a456-426614174000",
-  "invoiceNumber": "INV-2024-001",
+  "customerName": "Acme Corporation",
+  "invoiceNumber": "INV-20241107-00001",
   "issueDate": "2024-11-08",
   "dueDate": "2024-12-08",
   "status": "DRAFT",
@@ -799,7 +829,8 @@ POST /invoices/{id}/send
 {
   "id": "789e4567-e89b-12d3-a456-426614174000",
   "customerId": "123e4567-e89b-12d3-a456-426614174000",
-  "invoiceNumber": "INV-2024-001",
+  "customerName": "Acme Corporation",
+  "invoiceNumber": "INV-20241107-00001",
   "issueDate": "2024-11-07",
   "dueDate": "2024-12-07",
   "status": "SENT",
@@ -841,10 +872,11 @@ GET /invoices/{id}/balance
 ```json
 {
   "invoiceId": "789e4567-e89b-12d3-a456-426614174000",
+  "invoiceNumber": "INV-20241107-00001",
+  "status": "SENT",
   "totalAmount": 6050.00,
   "paidAmount": 3000.00,
-  "balanceDue": 3050.00,
-  "status": "SENT"
+  "balanceDue": 3050.00
 }
 ```
 
@@ -852,6 +884,105 @@ GET /invoices/{id}/balance
 ```bash
 curl -X GET http://localhost:8080/api/invoices/789e4567-e89b-12d3-a456-426614174000/balance \
   -H "Authorization: Bearer <token>"
+```
+
+### Mark Invoice as Paid
+
+Manually mark a SENT or OVERDUE invoice as PAID (administrative override).
+
+```http
+POST /invoices/{id}/mark-paid
+```
+
+**Path Parameters**:
+- `id`: Invoice UUID
+
+**Response** (200 OK): Returns the updated invoice.
+
+**Business Rules**:
+- Only SENT or OVERDUE invoices can be marked as paid
+- This is an administrative override that sets balance to zero
+
+**Example**:
+```bash
+curl -X POST http://localhost:8080/api/invoices/789e4567-e89b-12d3-a456-426614174000/mark-paid \
+  -H "Authorization: Bearer <token>"
+```
+
+### Cancel Invoice
+
+Cancel a draft or sent invoice.
+
+```http
+POST /invoices/{id}/cancel
+```
+
+**Path Parameters**:
+- `id`: Invoice UUID
+
+**Request Body** (optional):
+```json
+{
+  "reason": "Customer requested cancellation"
+}
+```
+
+**Response** (200 OK)
+
+**Business Rules**:
+- Only DRAFT or SENT invoices can be cancelled
+- PAID and already CANCELLED invoices cannot be cancelled
+- Status changes to CANCELLED
+
+**Example**:
+```bash
+curl -X POST http://localhost:8080/api/invoices/789e4567-e89b-12d3-a456-426614174000/cancel \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"reason": "Customer requested cancellation"}'
+```
+
+### Delete Invoice
+
+Delete an invoice (DRAFT status only).
+
+```http
+DELETE /invoices/{id}
+```
+
+**Path Parameters**:
+- `id`: Invoice UUID
+
+**Response** (204 No Content)
+
+**Business Rules**:
+- Only DRAFT invoices can be deleted
+- Sent, paid, overdue, or cancelled invoices cannot be deleted
+
+**Example**:
+```bash
+curl -X DELETE http://localhost:8080/api/invoices/789e4567-e89b-12d3-a456-426614174000 \
+  -H "Authorization: Bearer <token>"
+```
+
+### Export Invoice to PDF
+
+Generate and download a PDF document for an invoice.
+
+```http
+GET /invoices/{id}/pdf
+```
+
+**Path Parameters**:
+- `id`: Invoice UUID
+
+**Response** (200 OK): Binary PDF content with `Content-Type: application/pdf` header.
+
+**Example**:
+```bash
+curl -X GET http://localhost:8080/api/invoices/789e4567-e89b-12d3-a456-426614174000/pdf \
+  -H "Authorization: Bearer <token>" \
+  -o invoice.pdf
 ```
 
 ## Payment Endpoints
@@ -886,7 +1017,9 @@ POST /invoices/{invoiceId}/payments
   "amount": 3000.00,
   "paymentMethod": "BANK_TRANSFER",
   "referenceNumber": "TXN-12345",
-  "createdAt": "2024-11-07T14:00:00"
+  "createdAt": "2024-11-07T14:00:00",
+  "updatedInvoiceBalance": 3050.00,
+  "updatedInvoiceStatus": "SENT"
 }
 ```
 
@@ -904,7 +1037,7 @@ POST /invoices/{invoiceId}/payments
 - `referenceNumber`: Optional, max 100 characters
 
 **Business Rules**:
-- Only SENT invoices can receive payments
+- Only SENT or OVERDUE invoices can receive payments
 - Payment amount cannot exceed balance due
 - Invoice balance is automatically updated
 - Invoice status changes to PAID when balance reaches 0
@@ -942,7 +1075,9 @@ GET /payments/{id}
   "amount": 3000.00,
   "paymentMethod": "BANK_TRANSFER",
   "referenceNumber": "TXN-12345",
-  "createdAt": "2024-11-07T14:00:00"
+  "createdAt": "2024-11-07T14:00:00",
+  "updatedInvoiceBalance": 3050.00,
+  "updatedInvoiceStatus": "SENT"
 }
 ```
 
@@ -982,7 +1117,9 @@ GET /invoices/{invoiceId}/payments
     "amount": 3050.00,
     "paymentMethod": "CREDIT_CARD",
     "referenceNumber": "TXN-12346",
-    "createdAt": "2024-11-15T10:00:00"
+    "createdAt": "2024-11-15T10:00:00",
+    "updatedInvoiceBalance": 0.00,
+    "updatedInvoiceStatus": "PAID"
   }
 ]
 ```
@@ -990,6 +1127,93 @@ GET /invoices/{invoiceId}/payments
 **Example**:
 ```bash
 curl -X GET http://localhost:8080/api/invoices/789e4567-e89b-12d3-a456-426614174000/payments \
+  -H "Authorization: Bearer <token>"
+```
+
+## Analytics Endpoints
+
+### Get Revenue Over Time
+
+Returns monthly revenue aggregated from paid invoices.
+
+```http
+GET /analytics/revenue-over-time?months=12
+```
+
+**Query Parameters**:
+- `months`: Number of months to include (default: 12)
+
+**Response** (200 OK):
+```json
+[
+  {
+    "month": "2024-01",
+    "revenue": 15000.00
+  },
+  {
+    "month": "2024-02",
+    "revenue": 22500.00
+  }
+]
+```
+
+**Example**:
+```bash
+curl -X GET "http://localhost:8080/api/analytics/revenue-over-time?months=6" \
+  -H "Authorization: Bearer <token>"
+```
+
+### Get Invoice Status Breakdown
+
+Returns count of invoices grouped by status.
+
+```http
+GET /analytics/status-breakdown
+```
+
+**Response** (200 OK):
+```json
+{
+  "DRAFT": 5,
+  "SENT": 12,
+  "PAID": 30,
+  "OVERDUE": 3,
+  "CANCELLED": 2
+}
+```
+
+**Example**:
+```bash
+curl -X GET http://localhost:8080/api/analytics/status-breakdown \
+  -H "Authorization: Bearer <token>"
+```
+
+### Get Top Customers
+
+Returns top customers ranked by total revenue from paid invoices.
+
+```http
+GET /analytics/top-customers?limit=10
+```
+
+**Query Parameters**:
+- `limit`: Number of top customers to return (default: 10)
+
+**Response** (200 OK):
+```json
+[
+  {
+    "customerId": "123e4567-e89b-12d3-a456-426614174000",
+    "customerName": "Acme Corporation",
+    "totalRevenue": 45000.00,
+    "invoiceCount": 8
+  }
+]
+```
+
+**Example**:
+```bash
+curl -X GET "http://localhost:8080/api/analytics/top-customers?limit=5" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -1004,6 +1228,7 @@ curl -X GET http://localhost:8080/api/invoices/789e4567-e89b-12d3-a456-426614174
   email: string;           // Valid email, unique
   phone?: string;          // Optional, max 50 chars
   address?: string;        // Optional, max 500 chars
+  version: number;         // Optimistic locking version
   createdAt: string;       // ISO 8601 datetime
   updatedAt: string;       // ISO 8601 datetime
 }
@@ -1015,10 +1240,11 @@ curl -X GET http://localhost:8080/api/invoices/789e4567-e89b-12d3-a456-426614174
 {
   id: string;              // UUID
   customerId: string;      // UUID, foreign key
-  invoiceNumber: string;   // Unique, max 50 chars
+  customerName: string;    // Customer display name
+  invoiceNumber: string;   // Auto-generated, unique
   issueDate: string;       // ISO 8601 date
   dueDate: string;         // ISO 8601 date
-  status: "DRAFT" | "SENT" | "PAID";
+  status: "DRAFT" | "SENT" | "PAID" | "OVERDUE" | "CANCELLED";
   lineItems: LineItem[];   // Array of line items
   subtotal: number;        // Decimal(19,2)
   taxAmount: number;       // Decimal(19,2), 10% of subtotal
@@ -1053,6 +1279,8 @@ curl -X GET http://localhost:8080/api/invoices/789e4567-e89b-12d3-a456-426614174
   paymentMethod: "BANK_TRANSFER" | "CREDIT_CARD" | "CASH" | "CHECK";
   referenceNumber?: string; // Optional, max 100 chars
   createdAt: string;       // ISO 8601 datetime
+  updatedInvoiceBalance: number;  // Decimal(19,2), balance after payment
+  updatedInvoiceStatus: string;   // Invoice status after payment
 }
 ```
 
@@ -1063,7 +1291,6 @@ curl -X GET http://localhost:8080/api/invoices/789e4567-e89b-12d3-a456-426614174
   id: string;              // UUID
   username: string;        // 3-50 chars, unique
   email: string;           // Valid email, unique
-  token?: string;          // JWT token (only in auth responses)
 }
 ```
 
@@ -1106,7 +1333,6 @@ INVOICE_ID=$(curl -X POST http://localhost:8080/api/invoices \
   -H "Content-Type: application/json" \
   -d "{
     \"customerId\":\"$CUSTOMER_ID\",
-    \"invoiceNumber\":\"INV-001\",
     \"issueDate\":\"2024-11-07\",
     \"dueDate\":\"2024-12-07\",
     \"lineItems\":[

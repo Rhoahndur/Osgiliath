@@ -92,10 +92,10 @@ Development workflow, coding standards, and best practices for contributing to t
 
 #### Hot Reload
 
-**Backend** (Spring Boot DevTools):
-- Already configured in pom.xml
-- Changes to classes automatically reload
-- No need to restart server
+**Backend**:
+- Spring Boot DevTools is not currently configured
+- Server must be restarted manually after changes
+- To enable hot reload, add `spring-boot-devtools` to pom.xml
 
 **Frontend** (Next.js):
 - Built-in Fast Refresh
@@ -653,16 +653,25 @@ class InvoicePaymentFlowIntegrationTest {
 
 ### Frontend Testing
 
+#### Unit Tests
+
+```bash
+npm run test
+npm run test:ci
+```
+
 #### Type Checking
 
 ```bash
 npm run type-check
 ```
 
-#### Linting
+#### Linting & Formatting
 
 ```bash
 npm run lint
+npm run format:check
+npm run format
 ```
 
 ## Code Organization
@@ -672,33 +681,42 @@ npm run lint
 ```
 com.osgiliath/
 ├── api/                    # REST controllers
+│   ├── analytics/
 │   ├── auth/
 │   ├── customer/
 │   ├── invoice/
 │   ├── payment/
 │   └── error/
 ├── application/            # Use cases (CQRS)
+│   ├── analytics/
 │   ├── auth/
 │   ├── customer/
 │   │   ├── command/
 │   │   ├── query/
 │   │   └── dto/
-│   ├── invoice/
+│   ├── invoice/          # Flat structure (commands, queries, DTOs together)
 │   └── payment/
 ├── domain/                 # Business logic
 │   ├── customer/
 │   ├── invoice/
 │   ├── payment/
 │   └── shared/
-├── infrastructure/         # Persistence
+├── infrastructure/         # Persistence & external services
 │   ├── auth/
 │   ├── customer/
+│   ├── email/
 │   ├── invoice/
-│   └── payment/
+│   ├── payment/
+│   └── scheduler/
 └── config/                # Configuration
-    ├── SecurityConfig.java
+    ├── AsyncConfig.java
+    ├── CorsConfig.java
+    ├── CustomUserDetailsService.java
+    ├── DataInitializer.java
+    ├── JwtAuthenticationFilter.java
     ├── JwtTokenProvider.java
-    └── OpenApiConfig.java
+    ├── OpenApiConfig.java
+    └── SecurityConfig.java
 ```
 
 ### Frontend Directory Structure
@@ -710,6 +728,7 @@ src/
 │   ├── dashboard/
 │   ├── customers/
 │   ├── invoices/
+│   ├── reports/
 │   └── layout.tsx
 ├── components/            # Reusable components
 │   ├── shared/
@@ -721,21 +740,27 @@ src/
 │       ├── Header.tsx
 │       └── Navigation.tsx
 ├── models/               # TypeScript interfaces
+│   ├── Analytics.ts
+│   ├── Auth.ts
 │   ├── Customer.ts
 │   ├── Invoice.ts
 │   └── Payment.ts
 ├── services/             # API clients
 │   ├── apiClient.ts
+│   ├── analyticsService.ts
+│   ├── authService.ts
 │   ├── customerService.ts
 │   ├── invoiceService.ts
 │   └── paymentService.ts
 ├── viewmodels/           # React hooks (MVVM)
+│   ├── useAuthViewModel.ts
+│   ├── useCustomerFormViewModel.ts
 │   ├── useCustomerListViewModel.ts
 │   ├── useInvoiceFormViewModel.ts
+│   ├── useInvoiceListViewModel.ts
 │   └── usePaymentFormViewModel.ts
 └── utils/                # Utility functions
-    ├── formatters.ts
-    └── validators.ts
+    └── format.ts
 ```
 
 ## Git Workflow
@@ -933,7 +958,7 @@ docker-compose logs postgres
 ### Hot Reload Not Working
 
 **Backend**:
-- Ensure spring-boot-devtools is in pom.xml
+- Add spring-boot-devtools to pom.xml if not present
 - Rebuild project (Ctrl+F9 in IntelliJ)
 
 **Frontend**:

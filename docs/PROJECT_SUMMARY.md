@@ -37,8 +37,8 @@ Osgiliath is a modern, full-stack invoice management system demonstrating enterp
 
 ```
 Language: Java
-Files: 89 Java files
-Lines of Code: ~4,012 total lines
+Files: 136 Java files
+Lines of Code: ~9,900 total lines
 Framework: Spring Boot 3.2.0
 
 Distribution:
@@ -51,20 +51,20 @@ Distribution:
 **Breakdown by Package**:
 - Domain Models: 12 classes
 - Value Objects: 3 classes (Email, Money, BaseEntity)
-- Commands: 9 command classes
-- Queries: 7 query classes
-- Handlers: 16 handler classes
-- DTOs: 18 DTO classes
-- REST Controllers: 4 controllers
-- Repositories: 5 repository interfaces
-- Configuration: 6 config classes
+- Commands: 15 command classes
+- Queries: 11 query classes
+- Handlers: 27 handler classes
+- DTOs: 20 DTO classes
+- REST Controllers: 6 controllers
+- Repositories: 8 repository interfaces
+- Configuration: 8 config classes
 
 #### Frontend (TypeScript/React/Next.js)
 
 ```
 Language: TypeScript
-Files: 31 TypeScript/TSX files
-Lines of Code: ~2,929 total lines
+Files: 45 TypeScript/TSX files
+Lines of Code: ~4,900 total lines
 Framework: Next.js 14
 
 Distribution:
@@ -79,15 +79,15 @@ Distribution:
 ### File Count Summary
 
 ```
-Total Project Files: 120+
+Total Project Files: 180+
 
 Backend:
-- Java Source Files: 89
+- Java Source Files: 136
 - Configuration Files: 5
 - Test Files: Integrated within source
 
 Frontend:
-- TypeScript/TSX Files: 31
+- TypeScript/TSX Files: 45
 - Configuration Files: 6
 - Style Files: 2
 
@@ -144,9 +144,9 @@ Relationships:
    - Aggregate roots enforce invariants
 
 3. **CQRS Pattern**
-   - 9 distinct commands for write operations
-   - 7 distinct queries for read operations
-   - 16 dedicated handlers
+   - 15 distinct commands for write operations
+   - 11 distinct queries for read operations
+   - 27 dedicated handlers
    - Clear separation of concerns
 
 4. **Vertical Slice Architecture**
@@ -188,7 +188,7 @@ Relationships:
 4. **User Experience**
    - Loading states for async operations
    - Error handling with user-friendly messages
-   - Form validation with Zod
+   - Form validation with custom validators
    - Responsive design with Tailwind CSS
 
 5. **Authentication Flow**
@@ -262,7 +262,11 @@ Relationships:
   - Subtotal from line items
   - Tax calculation (10%)
   - Total amount
-- [x] Invoice status tracking (DRAFT, SENT, PAID)
+- [x] Invoice status tracking (DRAFT, SENT, PAID, OVERDUE, CANCELLED)
+- [x] Cancel invoice
+- [x] Mark invoice as paid (administrative override)
+- [x] Delete invoice (draft only)
+- [x] Export invoice to PDF
 - [x] View invoice details with line items
 - [x] List invoices with filtering
   - By status
@@ -408,10 +412,12 @@ Security:
   - JWT (jjwt 0.12.3)
   - BCrypt password hashing
 
+PDF Generation:
+  - iText 7.2.5
+
 Development:
   - Lombok
   - Springdoc OpenAPI
-  - Spring Boot DevTools
 
 Testing:
   - JUnit 5
@@ -437,8 +443,8 @@ State Management:
   - Custom ViewModels
 
 Forms:
-  - React Hook Form
-  - Zod validation
+  - Custom validation in ViewModels
+  - useState-based error handling
 
 HTTP:
   - Axios
@@ -619,10 +625,10 @@ Version Control:
    - Event handlers for cross-aggregate operations
    - Event sourcing for audit trail
 
-2. **Advanced Querying**
+2. **Advanced Querying** (Partially Implemented)
    - Complex filtering and search
-   - Reporting capabilities
-   - Dashboard analytics
+   - ~~Reporting capabilities~~ (Analytics endpoints implemented)
+   - ~~Dashboard analytics~~ (Revenue, status breakdown, top customers implemented)
 
 3. **Performance Optimization**
    - Caching strategy (Redis)
@@ -634,8 +640,8 @@ Version Control:
 4. **Additional Features**
    - Recurring invoices
    - Invoice templates
-   - PDF generation
-   - Email notifications
+   - ~~PDF generation~~ (Implemented with iText)
+   - ~~Email notifications~~ (EmailService infrastructure implemented)
 
 5. **Enhanced Security**
    - Role-based access control (RBAC)
@@ -693,8 +699,8 @@ The Osgiliath project successfully demonstrates:
 - [x] Comprehensive documentation
 
 **Final Metrics**:
-- **Backend**: 89 Java files, ~4,012 lines
-- **Frontend**: 31 TS/TSX files, ~2,929 lines
+- **Backend**: 136 Java files, ~9,900 lines
+- **Frontend**: 45 TS/TSX files, ~4,900 lines
 - **Documentation**: 10+ documents, ~3,500+ lines
 - **Features**: 30+ user stories delivered
 - **Architecture Patterns**: 5 major patterns implemented

@@ -248,18 +248,27 @@ public class Invoice extends BaseEntity {
     }
 
     // Business method
-    public void applyPayment(Money amount) {
-        if (status != SENT) {
-            throw new DomainException("Can only pay sent invoices");
+    public void applyPayment(Money paymentAmount) {
+        if (status != SENT && status != OVERDUE) {
+            throw new DomainException(
+                "Can only apply payments to SENT or OVERDUE invoices. Current status: " + status);
         }
-        if (amount.isGreaterThan(balanceDue)) {
-            throw new DomainException("Payment exceeds balance");
+        if (paymentAmount.isNegative() || paymentAmount.isZero()) {
+            throw new DomainException("Payment amount must be greater than zero");
         }
-        this.balanceDue = this.balanceDue.subtract(amount);
+        if (paymentAmount.isGreaterThan(balanceDue)) {
+            throw new DomainException("Payment amount cannot exceed balance due");
+        }
+        this.balanceDue = this.balanceDue.subtract(paymentAmount);
         if (this.balanceDue.isZero()) {
             this.status = PAID;
         }
     }
+
+    // Administrative override
+    public void markAsPaid() { ... }
+    public void cancel() { ... }
+    public void update(LocalDate issueDate, LocalDate dueDate) { ... }
 }
 ```
 
@@ -303,7 +312,7 @@ public interface JpaCustomerRepository
 
 ### Bounded Contexts
 
-The system is organized into three bounded contexts:
+The system is organized into five bounded contexts:
 
 #### 1. Customer Context
 
@@ -328,22 +337,51 @@ The system is organized into three bounded contexts:
 
 **Aggregate**: Invoice
 - **Entities**: Invoice (aggregate root), LineItem
-- **Value Objects**: Money, InvoiceStatus (enum)
+- **Value Objects**: Money, InvoiceStatus (enum: DRAFT, SENT, PAID, OVERDUE, CANCELLED)
 - **Invariants**:
   - Invoice must have line items before sending
   - Only DRAFT invoices can be edited
   - Due date must be after issue date
-  - Balance cannot be negative
+  - Payment amount cannot exceed balance due
+  - Payment amount must be positive
 
 **Business Operations**:
 - Create invoice in DRAFT status
 - Add/remove line items (DRAFT only)
 - Calculate totals automatically
 - Send invoice (DRAFT → SENT)
-- Apply payments (SENT only)
+- Apply payments (SENT or OVERDUE)
 - Auto-transition to PAID when balance = 0
+- Cancel invoice (DRAFT or SENT → CANCELLED)
+- Mark as paid (administrative override)
+- Auto-detect overdue invoices (scheduler)
 
-#### 3. Payment Context
+#### 3. Auth Context
+
+**Purpose**: Manage user authentication and authorization
+
+**Aggregate**: User
+- **Entities**: User (aggregate root)
+- **Invariants**:
+  - Username must be unique
+  - Email must be unique
+  - Password minimum 6 characters
+
+**Business Operations**:
+- Register user
+- Login with JWT
+- Get current user
+
+#### 4. Analytics Context
+
+**Purpose**: Provide business intelligence and reporting
+
+**Queries**:
+- `GetRevenueOverTimeQuery` — Monthly revenue from paid invoices
+- `GetInvoiceStatusBreakdownQuery` — Invoice counts by status
+- `GetTopCustomersQuery` — Top customers ranked by revenue
+
+#### 5. Payment Context
 
 **Purpose**: Track and apply payments against invoices
 
@@ -353,7 +391,7 @@ The system is organized into three bounded contexts:
 - **Invariants**:
   - Amount must be positive
   - Amount cannot exceed invoice balance
-  - Payment can only be applied to SENT invoices
+  - Payment can only be applied to SENT or OVERDUE invoices
 
 **Business Operations**:
 - Record payment with validation
@@ -409,8 +447,11 @@ Invoice (Aggregate Root)
     ├── create(customerId, number, issueDate, dueDate)
     ├── addLineItem(desc, qty, price)
     ├── removeLineItem(lineItemId)
+    ├── update(issueDate, dueDate)
     ├── send()
     ├── applyPayment(amount)
+    ├── markAsPaid()
+    ├── cancel()
     └── recalculateTotals()
 ```
 
@@ -446,9 +487,12 @@ public class Email {
         return new Email(address.toLowerCase());
     }
 
+    private static final Pattern EMAIL_PATTERN =
+        Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
+
     private static void validateFormat(String email) {
-        if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-            throw new DomainException("Invalid email format");
+        if (!EMAIL_PATTERN.matcher(email).matches()) {
+            throw new IllegalArgumentException("Invalid email address format: " + email);
         }
     }
 
@@ -495,13 +539,35 @@ public class Money {
         return this.amount.compareTo(other.amount) > 0;
     }
 
+    public boolean isGreaterThanOrEqual(Money other) {
+        return this.amount.compareTo(other.amount) >= 0;
+    }
+
+    public boolean isLessThan(Money other) {
+        return this.amount.compareTo(other.amount) < 0;
+    }
+
     public boolean isZero() {
         return this.amount.compareTo(BigDecimal.ZERO) == 0;
     }
 
+    public boolean isNegative() {
+        return this.amount.compareTo(BigDecimal.ZERO) < 0;
+    }
+
     // Immutable, equals and hashCode
+    // Note: RoundingMode.HALF_UP applied on creation
 }
 ```
+
+### Domain Exceptions
+
+In addition to `DomainException`, the domain defines specific exception types:
+
+- `CustomerHasInvoicesException` — Prevents deleting customers with existing invoices
+- `InsufficientBalanceException` — Payment amount exceeds invoice balance
+- `InvoiceHasNoLineItemsException` — Cannot send invoice without line items
+- `InvoiceNotSentException` — Payment attempted on non-SENT/non-OVERDUE invoice
 
 **Benefits of Value Objects**:
 - Type safety (can't mix up Email and String)
@@ -611,7 +677,13 @@ public class GetInvoiceByIdQueryHandler {
 - `AddLineItemCommand`
 - `RemoveLineItemCommand`
 - `SendInvoiceCommand`
+- `CancelInvoiceCommand`
+- `DeleteInvoiceCommand`
+- `MarkInvoiceAsPaidCommand`
+- `MarkOverdueInvoicesCommand`
 - `RecordPaymentCommand`
+- `LoginCommand`
+- `RegisterCommand`
 
 #### Queries
 
@@ -620,8 +692,12 @@ public class GetInvoiceByIdQueryHandler {
 - `GetInvoiceByIdQuery`
 - `ListInvoicesQuery`
 - `GetInvoiceBalanceQuery`
+- `ExportInvoiceToPdfQuery`
 - `GetPaymentByIdQuery`
 - `ListPaymentsForInvoiceQuery`
+- `GetRevenueOverTimeQuery`
+- `GetInvoiceStatusBreakdownQuery`
+- `GetTopCustomersQuery`
 
 ## Vertical Slice Architecture
 
@@ -682,31 +758,40 @@ We use a hybrid approach combining VSA with Clean Architecture:
 
 ```
 application/
+  analytics/    # Analytics queries and handlers
+  auth/         # Authentication commands and handlers
   customer/     # Vertical slice for customer features
     command/    # Write operations
     query/      # Read operations
     dto/        # Data transfer objects
-  invoice/      # Vertical slice for invoice features
-    command/
-    query/
-    dto/
+  invoice/      # Vertical slice (flat structure: commands, queries, DTOs together)
   payment/      # Vertical slice for payment features
     command/
     query/
-    dto
+    dto/
 
 domain/
+  auth/         # Auth domain model (User, UserRepository)
   customer/     # Customer domain model
   invoice/      # Invoice domain model
   payment/      # Payment domain model
   shared/       # Shared domain concepts
+  exceptions/   # Domain-specific exceptions
 
 infrastructure/
+  auth/         # Auth persistence
   customer/     # Customer persistence
+  email/        # Email service
   invoice/      # Invoice persistence
   payment/      # Payment persistence
+  scheduler/    # Scheduled tasks (overdue invoice detection)
+
+config/         # Application configuration
+  SecurityConfig, JwtTokenProvider, CorsConfig, etc.
 
 api/
+  analytics/    # Analytics REST endpoints
+  auth/         # Auth REST endpoints
   customer/     # Customer REST endpoints
   invoice/      # Invoice REST endpoints
   payment/      # Payment REST endpoints

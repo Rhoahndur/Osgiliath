@@ -724,6 +724,10 @@ public class GetCustomerByIdQueryHandler {
 - **Optimistic Locking**: Can be added via @Version annotation if needed
 - **Auditing**: CreatedAt and UpdatedAt tracked in BaseEntity
 
+## License
+
+This project is licensed under the [MIT License](../LICENSE).
+
 ## Further Reading
 
 - [Architecture Documentation](../docs/ARCHITECTURE.md)

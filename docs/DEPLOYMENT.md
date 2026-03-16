@@ -88,10 +88,6 @@ This guide covers deploying Osgiliath to production. The application consists of
 Create a `.env` file or set environment variables:
 
 ```bash
-# Application
-SPRING_PROFILES_ACTIVE=production
-SERVER_PORT=8080
-
 # Database
 SPRING_DATASOURCE_URL=jdbc:postgresql://prod-db-host:5432/osgiliath
 SPRING_DATASOURCE_USERNAME=osgiliath_prod
@@ -101,13 +97,17 @@ SPRING_DATASOURCE_PASSWORD=<strong-password>
 JWT_SECRET=<256-bit-secret-key>
 JWT_EXPIRATION=86400000
 
-# Logging
-LOGGING_LEVEL_ROOT=INFO
-LOGGING_LEVEL_COM_OSGILIATH=INFO
-
 # CORS
 CORS_ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+
+# Email (optional)
+EMAIL_ENABLED=false
+
+# Port (Railway sets this automatically)
+PORT=8080
 ```
+
+> **Note**: The `prod` profile is activated via `-Dspring.profiles.active=prod` in the Dockerfile ENTRYPOINT, not via environment variable. Production config is in `application-prod.yml`.
 
 ### Frontend Environment Variables
 
@@ -406,28 +406,25 @@ Upload `out/` directory to:
 **Backend Dockerfile**:
 
 ```dockerfile
-# backend/Dockerfile
-FROM eclipse-temurin:17-jdk-alpine AS build
+# Dockerfile (at project root)
+# Build stage
+FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
-COPY pom.xml .
-COPY src ./src
-COPY mvnw .
-COPY .mvn ./.mvn
-RUN ./mvnw clean package -DskipTests
+COPY backend/ .
+RUN mvn clean package -DskipTests
 
-FROM eclipse-temurin:17-jre-alpine
+# Runtime stage
+FROM eclipse-temurin:17-jre
 WORKDIR /app
-COPY --from=build /app/target/osgiliath-backend-*.jar app.jar
-
-# Create non-root user
-RUN addgroup -S osgiliath && adduser -S osgiliath -G osgiliath
-USER osgiliath
-
+COPY --from=build /app/target/osgiliath-backend-1.0.0-SNAPSHOT.jar app.jar
+ENV PORT=8080
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java -Xmx150m -Xms80m -XX:+UseSerialGC -XX:MaxMetaspaceSize=80m -XX:ReservedCodeCacheSize=32m -XX:MaxDirectMemorySize=32m -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xss256k -Dserver.port=$PORT -Dspring.profiles.active=prod -jar app.jar"]
 ```
 
-**Frontend Dockerfile**:
+> **Note**: The JVM flags are optimized for Railway's free tier (limited memory). Adjust `-Xmx` and `-Xms` for larger deployments.
+
+**Frontend Dockerfile** (Recommended template -- `frontend/Dockerfile` does not yet exist):
 
 ```dockerfile
 # frontend/Dockerfile
@@ -454,7 +451,9 @@ CMD ["npm", "start"]
 
 #### 2. Create Production Docker Compose
 
-**docker-compose.prod.yml**:
+> **Note**: Only `docker-compose.yml` (development, runs PostgreSQL only) currently exists in the repo. The following is a recommended production template.
+
+**docker-compose.prod.yml** (recommended template):
 
 ```yaml
 version: '3.8'
@@ -488,7 +487,7 @@ services:
       SPRING_DATASOURCE_USERNAME: osgiliath_prod
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
-      SPRING_PROFILES_ACTIVE: production
+      SPRING_PROFILES_ACTIVE: prod
     ports:
       - "8080:8080"
     depends_on:
@@ -498,7 +497,7 @@ services:
       - osgiliath-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/auth/login"]  # Actuator not installed; use any public endpoint
       interval: 30s
       timeout: 10s
       retries: 3
@@ -740,6 +739,8 @@ ssl_key_file = '/path/to/server.key'
 ### Application Monitoring
 
 #### Enable Spring Boot Actuator
+
+> **Note**: Spring Boot Actuator is **not currently in pom.xml**. To enable health checks and metrics, add these dependencies:
 
 Add to `pom.xml`:
 

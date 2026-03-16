@@ -65,16 +65,19 @@ frontend/
 ### Installation
 
 1. Install dependencies:
+
 ```bash
 npm install
 ```
 
 2. Create environment file:
+
 ```bash
 cp .env.local.example .env.local
 ```
 
 3. Configure environment variables in `.env.local`:
+
 ```
 NEXT_PUBLIC_API_URL=http://localhost:8080/api
 ```
@@ -82,6 +85,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8080/api
 ### Running the Application
 
 **Development mode:**
+
 ```bash
 npm run dev
 ```
@@ -89,17 +93,20 @@ npm run dev
 The application will be available at http://localhost:3000
 
 **Production build:**
+
 ```bash
 npm run build
 npm start
 ```
 
 **Type checking:**
+
 ```bash
 npm run type-check
 ```
 
 **Linting:**
+
 ```bash
 npm run lint
 ```
@@ -107,12 +114,14 @@ npm run lint
 ## Features
 
 ### Authentication
+
 - Login/Register pages
 - JWT token management
 - Auto-redirect to login if not authenticated
 - Session persistence via localStorage
 
 ### Customer Management
+
 - List customers with pagination
 - Create new customers
 - View customer details
@@ -120,6 +129,7 @@ npm run lint
 - Delete customers
 
 ### Invoice Management
+
 - List invoices with filtering by status
 - Create invoices with multiple line items
 - View invoice details
@@ -129,6 +139,7 @@ npm run lint
 - Invoice status tracking (DRAFT, SENT, PAID, OVERDUE)
 
 ### Payment Management
+
 - Record payments against invoices
 - View payment history
 - Payment method tracking
@@ -136,6 +147,7 @@ npm run lint
 - Payment validation (amount <= balance)
 
 ### Dashboard
+
 - Overview statistics
 - Recent invoices
 - Quick actions for creating customers/invoices
@@ -143,17 +155,22 @@ npm run lint
 ## MVVM Architecture
 
 ### Models (src/models/)
+
 Define TypeScript interfaces for data structures. Pure data types with no logic.
 
 ### Services (src/services/)
+
 Handle all API communication. Each service corresponds to a backend resource:
+
 - `authService` - Authentication operations
 - `customerService` - Customer CRUD operations
 - `invoiceService` - Invoice operations including line items
 - `paymentService` - Payment recording and retrieval
 
 ### ViewModels (src/viewmodels/)
+
 React hooks that manage state and business logic for views:
+
 - Handle loading/error states
 - Form validation
 - Data transformations
@@ -161,11 +178,13 @@ React hooks that manage state and business logic for views:
 - Provide clean API for views
 
 ### Views (src/app/)
+
 Next.js pages and components that render UI. They consume ViewModels and remain as simple as possible.
 
 ## API Integration
 
 All API calls include JWT authentication via interceptors in `apiClient.ts`:
+
 - Automatically adds `Authorization: Bearer <token>` header
 - Handles 401 responses by redirecting to login
 - Centralized error handling
@@ -173,6 +192,7 @@ All API calls include JWT authentication via interceptors in `apiClient.ts`:
 ## State Management
 
 State is managed through React hooks in ViewModels:
+
 - `useState` for component state
 - `useEffect` for side effects (data fetching)
 - Custom hooks encapsulate business logic
@@ -181,6 +201,7 @@ State is managed through React hooks in ViewModels:
 ## Styling
 
 Tailwind CSS utility classes are used throughout:
+
 - Responsive design built-in
 - Consistent color scheme (blue primary, gray neutrals)
 - Pre-built components in `components/shared/`
@@ -203,3 +224,7 @@ Tailwind CSS utility classes are used throughout:
 - Form validation in ViewModels, not in components
 - Error messages displayed to users
 - Loading states handled in all async operations
+
+## License
+
+This project is licensed under the [MIT License](../LICENSE).
