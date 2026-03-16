@@ -1224,6 +1224,47 @@ graph TB
 
 ---
 
+## 11. Development Toolchain & CI/CD
+
+### Code Quality Pipeline
+
+```mermaid
+graph LR
+    subgraph "Pre-commit Hook (Husky)"
+        direction TB
+        FE_LINT[Frontend: Prettier + ESLint<br/>via lint-staged]
+        BE_FMT[Backend: Spotless<br/>Google Java Format]
+    end
+
+    subgraph "GitHub Actions CI"
+        direction TB
+        BE_CI[Backend Job<br/>Maven verify + Spotless check<br/>PostgreSQL service container]
+        FE_CI[Frontend Job<br/>Type-check + Lint + Format-check<br/>+ Tests + Build]
+    end
+
+    DEV[Developer] -->|git commit| FE_LINT & BE_FMT
+    FE_LINT & BE_FMT -->|git push| BE_CI & FE_CI
+
+    style DEV fill:#e1f5ff
+    style FE_LINT fill:#fff9c4
+    style BE_FMT fill:#c8e6c9
+    style BE_CI fill:#c8e6c9
+    style FE_CI fill:#fff9c4
+```
+
+### Tooling Summary
+
+| Layer | Tool | Purpose |
+|-------|------|---------|
+| **Backend formatting** | Spotless + Google Java Format (AOSP) | Consistent Java code style |
+| **Frontend formatting** | Prettier | Consistent TS/CSS/JSON style |
+| **Frontend linting** | ESLint (Next.js config) | Code quality rules |
+| **Pre-commit hooks** | Husky + lint-staged | Auto-format and lint on commit |
+| **CI/CD** | GitHub Actions | Build, test, and quality checks on push/PR |
+| **Editor consistency** | EditorConfig | Cross-editor indent/charset/EOL settings |
+
+---
+
 ## Architecture Decision Records (ADR)
 
 ### ADR-001: Clean Architecture with DDD
@@ -1300,6 +1341,6 @@ graph TB
 
 ---
 
-**Document Version:** 1.1
-**Last Updated:** March 14, 2026
+**Document Version:** 1.2
+**Last Updated:** March 16, 2026
 **Maintained By:** Osgiliath Development Team
