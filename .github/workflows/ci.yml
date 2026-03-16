@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend Build & Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: osgiliath
+          POSTGRES_USER: osgiliath
+          POSTGRES_PASSWORD: osgiliath_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U osgiliath"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
+
+      - name: Build and test
+        working-directory: backend
+        run: ./mvnw clean verify
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/osgiliath
+          SPRING_DATASOURCE_USERNAME: osgiliath
+          SPRING_DATASOURCE_PASSWORD: osgiliath_password
+
+  frontend:
+    name: Frontend Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Type check
+        working-directory: frontend
+        run: npm run type-check
+
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Format check
+        working-directory: frontend
+        run: npm run format:check
+
+      - name: Run tests
+        working-directory: frontend
+        run: npm run test:ci
+
+      - name: Build
+        working-directory: frontend
+        run: npm run build
