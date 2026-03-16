@@ -49,20 +49,6 @@ public class LineItem extends BaseEntity {
         this.lineTotal = unitPrice.multiply(quantity);
     }
 
-    /**
-     * Update line item
-     */
-    void update(String description, BigDecimal quantity, Money unitPrice) {
-        validateDescription(description);
-        validateQuantity(quantity);
-        validateUnitPrice(unitPrice);
-
-        this.description = description;
-        this.quantity = quantity;
-        this.unitPrice = unitPrice;
-        this.lineTotal = unitPrice.multiply(quantity);
-    }
-
     private void validateDescription(String description) {
         if (description == null || description.isBlank()) {
             throw new DomainException("Line item description cannot be empty");

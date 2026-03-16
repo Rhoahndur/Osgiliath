@@ -2,6 +2,7 @@ package com.osgiliath.api.auth;
 
 import com.osgiliath.application.auth.*;
 import com.osgiliath.application.auth.dto.LoginRequest;
+import com.osgiliath.domain.shared.DomainException;
 import com.osgiliath.application.auth.dto.LoginResponse;
 import com.osgiliath.application.auth.dto.RegisterRequest;
 import com.osgiliath.application.auth.dto.UserResponse;
@@ -59,7 +60,7 @@ public class AuthController {
         String username = authentication.getName();
 
         User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(() -> new DomainException("User not found: " + username));
 
         UserResponse response = new UserResponse(
             user.getId(),

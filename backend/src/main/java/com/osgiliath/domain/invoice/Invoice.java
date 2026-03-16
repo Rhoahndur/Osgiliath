@@ -179,9 +179,13 @@ public class Invoice extends BaseEntity {
         if (status != InvoiceStatus.DRAFT && status != InvoiceStatus.SENT) {
             throw new DomainException("Can only cancel draft or sent invoices");
         }
-
+        boolean wasDraft = (status == InvoiceStatus.DRAFT);
         this.status = InvoiceStatus.CANCELLED;
-        this.balanceDue = Money.zero();
+        // DRAFT invoices have no payments, safe to zero out
+        // SENT invoices retain balanceDue as record of outstanding amount at cancellation
+        if (wasDraft) {
+            this.balanceDue = Money.zero();
+        }
     }
 
     /**

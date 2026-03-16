@@ -1,5 +1,9 @@
 package com.osgiliath.api.error;
 
+import com.osgiliath.domain.exceptions.CustomerHasInvoicesException;
+import com.osgiliath.domain.exceptions.InsufficientBalanceException;
+import com.osgiliath.domain.exceptions.InvoiceHasNoLineItemsException;
+import com.osgiliath.domain.exceptions.InvoiceNotSentException;
 import com.osgiliath.domain.shared.DomainException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +25,66 @@ import java.util.Map;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(CustomerHasInvoicesException.class)
+    public ResponseEntity<ErrorResponse> handleCustomerHasInvoices(
+            CustomerHasInvoicesException ex,
+            HttpServletRequest request) {
+        log.error("Customer has invoices: {}", ex.getMessage());
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.CONFLICT.value())
+                .error(HttpStatus.CONFLICT.getReasonPhrase())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(InsufficientBalanceException.class)
+    public ResponseEntity<ErrorResponse> handleInsufficientBalance(
+            InsufficientBalanceException ex,
+            HttpServletRequest request) {
+        log.error("Insufficient balance: {}", ex.getMessage());
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                .error(HttpStatus.UNPROCESSABLE_ENTITY.getReasonPhrase())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
+    }
+
+    @ExceptionHandler(InvoiceHasNoLineItemsException.class)
+    public ResponseEntity<ErrorResponse> handleInvoiceHasNoLineItems(
+            InvoiceHasNoLineItemsException ex,
+            HttpServletRequest request) {
+        log.error("Invoice has no line items: {}", ex.getMessage());
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                .error(HttpStatus.UNPROCESSABLE_ENTITY.getReasonPhrase())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
+    }
+
+    @ExceptionHandler(InvoiceNotSentException.class)
+    public ResponseEntity<ErrorResponse> handleInvoiceNotSent(
+            InvoiceNotSentException ex,
+            HttpServletRequest request) {
+        log.error("Invoice not sent: {}", ex.getMessage());
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                .error(HttpStatus.UNPROCESSABLE_ENTITY.getReasonPhrase())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
+    }
 
     /**
      * Handle domain exceptions (business rule violations)

@@ -5,6 +5,7 @@ import com.osgiliath.domain.invoice.Invoice;
 import com.osgiliath.domain.invoice.LineItem;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
  * Email Service using AWS SES
  * Handles sending invoice emails with PDF attachments
  */
+@ConditionalOnProperty(name = "app.email.enabled", havingValue = "true")
 @Service
 @Slf4j
 public class EmailService {
@@ -245,6 +247,13 @@ public class EmailService {
         html.append("</html>");
 
         return html.toString();
+    }
+
+    @jakarta.annotation.PreDestroy
+    public void close() {
+        if (sesClient != null) {
+            sesClient.close();
+        }
     }
 
     /**

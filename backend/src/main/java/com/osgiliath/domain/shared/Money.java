@@ -38,11 +38,11 @@ public class Money {
     }
 
     public Money add(Money other) {
-        return new Money(this.amount.add(other.amount));
+        return new Money(this.amount.add(other.amount).setScale(2, RoundingMode.HALF_UP));
     }
 
     public Money subtract(Money other) {
-        return new Money(this.amount.subtract(other.amount));
+        return new Money(this.amount.subtract(other.amount).setScale(2, RoundingMode.HALF_UP));
     }
 
     public Money multiply(BigDecimal multiplier) {

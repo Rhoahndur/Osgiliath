@@ -49,6 +49,16 @@ springdoc:
     path: /swagger-ui.html
     enabled: true
 
+# Seed data configuration
+app:
+  seed:
+    enabled: true
+    admin-username: ${SEED_ADMIN_USERNAME:admin}
+    admin-password: ${SEED_ADMIN_PASSWORD:admin123}
+    admin-email: ${SEED_ADMIN_EMAIL:admin@osgiliath.com}
+  email:
+    enabled: ${EMAIL_ENABLED:false}
+
 # AWS SES Configuration (for email sending)
 # Note: Configure actual AWS credentials via environment variables or AWS CLI for production
 aws:

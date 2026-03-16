@@ -7,7 +7,7 @@ spring:
   jpa:
     show-sql: false
     hibernate:
-      ddl-auto: update  # Allow schema updates in prod for now
+      ddl-auto: validate
     properties:
       hibernate:
         format_sql: false
@@ -34,6 +34,12 @@ logging:
     org.hibernate.type: WARN              # No parameter binding logging
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"  # Simpler log format
+
+app:
+  seed:
+    enabled: false
+  email:
+    enabled: ${EMAIL_ENABLED:false}
 
 # Disable Swagger in production for security and performance
 springdoc:
